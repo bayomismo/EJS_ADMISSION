@@ -50,10 +50,10 @@ async function getHomeData() {
 }
 
 const QUICK_ACCESS = [
-  { href: "/schools", label: "ابحث عن مدرسة", desc: "حدّد محافظتك ومدينتك واعثر على أقرب مدرسة", icon: Search, color: "from-emerald-500 to-teal-600" },
+  { href: "/schools", label: "ابحث عن مدرسة", desc: "حدّد محافظتك ومدينتك واعثر على أقرب مدرسة", icon: Search, color: "from-blue-600 to-blue-800" },
   { href: "/faq", label: "الأسئلة الشائعة", desc: "إجابات على أكثر الأسئلة شيوعاً حول القبول", icon: HelpCircle, color: "from-rose-500 to-red-600" },
   { href: "/documents", label: "مركز المستندات", desc: "شروط القبول ونماذج التقديم والأدلة الإرشادية", icon: FileText, color: "from-amber-500 to-orange-600" },
-  { href: "/news", label: "آخر الأخبار", desc: "تابع آخر إعلانات وأخبار المدارس", icon: Newspaper, color: "from-teal-500 to-cyan-600" },
+  { href: "/news", label: "آخر الأخبار", desc: "تابع آخر إعلانات وأخبار المدارس", icon: Newspaper, color: "from-blue-600 to-blue-800" },
 ];
 
 export default async function HomePage() {
@@ -180,13 +180,13 @@ export default async function HomePage() {
             {/* Section A — Public */}
             <Link href="/news" className="group">
               <Card className="relative h-full overflow-hidden p-6 transition-all hover:shadow-card hover:-translate-y-1">
-                <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-teal/10 blur-2xl" />
+                <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-blue-600/10 blur-2xl" />
                 <div className="relative">
-                  <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-bl from-teal-500 to-cyan-600 text-white shadow-soft">
+                  <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-bl from-blue-600 to-blue-800 text-white shadow-soft">
                     <Megaphone className="h-7 w-7" />
                   </span>
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="rounded-md bg-teal/10 px-2 py-0.5 text-[11px] font-bold text-teal">القسم A</span>
+                    <span className="rounded-md bg-blue-600/10 px-2 py-0.5 text-[11px] font-bold text-blue-600">القسم A</span>
                   </div>
                   <h3 className="mb-1.5 text-xl font-bold text-foreground group-hover:text-primary transition-colors">
                     البوابة العامة
@@ -200,7 +200,7 @@ export default async function HomePage() {
                     <Badge variant="secondary" className="text-[10px]">أسئلة شائعة</Badge>
                     <Badge variant="secondary" className="text-[10px]">مستندات</Badge>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-sm font-bold text-teal">
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600">
                     استعرض المحتوى <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                   </span>
                 </div>
@@ -461,7 +461,7 @@ export default async function HomePage() {
       </section>
 
       {/* ───────── CTA ───────── */}
-      <section className="border-t border-border bg-gradient-to-l from-primary to-teal">
+      <section className="border-t border-border bg-gradient-to-l from-primary to-blue-900">
         <div className="mx-auto max-w-7xl px-4 py-14 text-center text-white">
           <Award className="mx-auto mb-4 h-12 w-12" />
           <h2 className="text-2xl font-extrabold sm:text-3xl mb-3">

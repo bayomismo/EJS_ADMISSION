@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   PENDING: { label: "قيد الانتظار", cls: "bg-amber-100 text-amber-700" },
-  REVIEW: { label: "قيد المراجعة", cls: "bg-teal-100 text-teal-700" },
+  REVIEW: { label: "قيد المراجعة", cls: "bg-blue-100 text-blue-700" },
   ACCEPTED: { label: "مقبول", cls: "bg-emerald-100 text-emerald-700" },
   REJECTED: { label: "مرفوض", cls: "bg-rose-100 text-rose-700" },
   WAITLIST: { label: "قائمة انتظار", cls: "bg-indigo-100 text-indigo-700" },

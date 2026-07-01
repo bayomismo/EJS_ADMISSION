@@ -95,3 +95,23 @@ Work Log:
 
 Stage Summary:
 - Hydration mismatch resolved. The HeroCountdown now renders a stable skeleton on the server and ticks live only after client mount, eliminating the server/client time discrepancy.
+---
+Task ID: 5
+Agent: Lead Full Stack Engineer (Z.ai Code, main session)
+Task: Re-theme the entire system to a Red / Blue / White color scheme inspired by the EJS logo (red sun, blue background, white book pages).
+
+Work Log:
+- Re-analyzed the EJS logo via VLM specifically for red/blue/white: Red #E62129 (sun), the dark background which reads as institutional blue, White #FFFFFF (book pages).
+- Rewrote src/app/globals.css :root + .dark palettes into a crisp Red/Blue/White tricolor:
+  • Primary = deep institutional blue #0E4C92 (oklch 0.45 0.13 255) → buttons, links, active states, sidebar, charts
+  • Accent/CTA = exact logo red #E62129 (oklch 0.58 0.22 27) → Apply buttons, alerts, destructive
+  • Base = white #FFFFFF with a faint blue tint → backgrounds, cards
+  • Secondary/muted/accent = soft blue tints
+  • Kept variable names (--primary, --crimson, --teal, --gold, etc.) so all existing components auto-inherit the new theme. --teal remapped to brand blue for component compatibility. --gold kept as minor accent for "featured" badges only.
+  • Dark mode rebuilt around deep navy blue backgrounds with brighter blue + red accents.
+- Replaced all hardcoded Tailwind teal/cyan utility classes with blue across the codebase (from-teal-500→from-blue-600, bg-teal-100→bg-blue-100, text-teal-600→text-blue-600, to-teal→to-blue-900, etc.) in: page.tsx, admin dashboard, admission success pages, applications-manager, audit-viewer, reports-dashboard, announcement-bar. Kept emerald (semantic success/active green) and rose/crimson (the red accent) as they are part of the red/blue/white scheme.
+- Homepage three sections now: Section A (Public) = blue gradient, Section B (Student Admission) = red/crimson gradient (primary CTA), Section C (Teacher Admission) = gold (tertiary accent).
+- Verification: lint clean (0 errors). All routes 200 (public) / 307 (admin auth). No runtime errors. VLM confirmed: primary brand color is blue, CTA/Apply accent is red, background is white — "resembles a red/blue/white tricolor." Admin dashboard sidebar/icons/buttons are blue.
+
+Stage Summary:
+- The entire platform now uses a Red / Blue / White color scheme inspired by the EJS logo: deep institutional blue (#0E4C92) as primary, exact logo red (#E62129) as the CTA/accent, and white as the base. All components, admin dashboard, admission flows, and reports inherit the new theme automatically via CSS variables.

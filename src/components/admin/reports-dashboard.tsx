@@ -33,7 +33,7 @@ interface Metrics {
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   PENDING: { label: "قيد الانتظار", cls: "bg-amber-100 text-amber-700" },
-  REVIEW: { label: "قيد المراجعة", cls: "bg-teal-100 text-teal-700" },
+  REVIEW: { label: "قيد المراجعة", cls: "bg-blue-100 text-blue-700" },
   ACCEPTED: { label: "مقبول", cls: "bg-emerald-100 text-emerald-700" },
   REJECTED: { label: "مرفوض", cls: "bg-rose-100 text-rose-700" },
   WAITLIST: { label: "قائمة انتظار", cls: "bg-indigo-100 text-indigo-700" },
@@ -99,8 +99,8 @@ export function ReportsDashboard() {
         </Card>
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <div><p className="text-xs text-muted-foreground">قيد المراجعة (طالب)</p><p className="text-3xl font-extrabold nums mt-1 text-teal-600">{toArabicNumber(m.students.byStatus.find((s) => s.status === "REVIEW")?.count || 0)}</p></div>
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-100 text-teal-700"><Clock className="h-6 w-6" /></span>
+            <div><p className="text-xs text-muted-foreground">قيد المراجعة (طالب)</p><p className="text-3xl font-extrabold nums mt-1 text-blue-600">{toArabicNumber(m.students.byStatus.find((s) => s.status === "REVIEW")?.count || 0)}</p></div>
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-700"><Clock className="h-6 w-6" /></span>
           </div>
         </Card>
       </div>
@@ -167,7 +167,7 @@ export function ReportsDashboard() {
                 <div key={g.name} className="flex items-center gap-3">
                   <span className="text-xs w-24 truncate">{g.name}</span>
                   <div className="flex-1 h-5 bg-secondary rounded-full overflow-hidden">
-                    <div className="h-full bg-teal/70 rounded-full" style={{ width: `${(g.count / maxGov) * 100}%` }} />
+                    <div className="h-full bg-blue-600/70 rounded-full" style={{ width: `${(g.count / maxGov) * 100}%` }} />
                   </div>
                   <span className="font-bold text-xs w-8 text-left nums">{toArabicNumber(g.count)}</span>
                 </div>

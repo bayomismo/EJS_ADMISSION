@@ -46,105 +46,106 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ───────── Egyptian Japanese Schools — Logo-Derived Palette ───────── */
-/* Colors extracted directly from the EJS logo:
-   Primary Teal   #0A7D6F  (logo background — main brand color)
-   Secondary Teal #0A5D5A  (darker teal — depth)
-   Gold           #D4AF37  (logo border — accent/premium)
-   Crimson Red    #E63946  (rising sun — CTAs/alerts)
+/* ───────── Egyptian Japanese Schools — Red / Blue / White ───────── */
+/* Palette inspired by the EJS logo: the red rising sun (#E62129), the
+   dark blue-green background which reads as institutional blue, and the
+   white book pages. Implemented as a crisp Red / Blue / White tricolor:
+     Blue   #0E4C92  → primary brand color (institutional/deep blue)
+     Red    #E62129  → accent / CTAs / alerts (exact logo red)
+     White  #FFFFFF  → base background
 */
 :root {
   --radius: 0.75rem;
 
-  /* Warm soft background */
-  --background: oklch(0.99 0.004 168);
-  --foreground: oklch(0.22 0.03 172);
+  /* White base background with a faint blue tint */
+  --background: oklch(0.995 0.004 250);
+  --foreground: oklch(0.22 0.03 255);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.03 172);
+  --card-foreground: oklch(0.22 0.03 255);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 172);
+  --popover-foreground: oklch(0.22 0.03 255);
 
-  /* Primary = logo teal #0A7D6F */
-  --primary: oklch(0.52 0.09 168);
-  --primary-foreground: oklch(0.99 0.01 95);
+  /* Primary = deep institutional blue #0E4C92 */
+  --primary: oklch(0.45 0.13 255);
+  --primary-foreground: oklch(0.99 0.005 250);
 
-  /* Secondary = darker logo teal #0A5D5A */
-  --secondary: oklch(0.96 0.014 168);
-  --secondary-foreground: oklch(0.42 0.07 178);
+  /* Secondary = soft blue tint */
+  --secondary: oklch(0.96 0.015 250);
+  --secondary-foreground: oklch(0.35 0.08 255);
 
-  --muted: oklch(0.965 0.008 168);
-  --muted-foreground: oklch(0.5 0.025 168);
+  --muted: oklch(0.965 0.008 250);
+  --muted-foreground: oklch(0.5 0.025 255);
 
-  --accent: oklch(0.95 0.03 168);
-  --accent-foreground: oklch(0.42 0.07 178);
+  --accent: oklch(0.95 0.025 250);
+  --accent-foreground: oklch(0.35 0.08 255);
 
-  /* Logo accent colors */
-  --crimson: oklch(0.58 0.20 25);   /* #E63946 rising sun */
-  --teal: oklch(0.42 0.07 178);     /* #0A5D5A secondary teal */
-  --gold: oklch(0.78 0.14 85);      /* #D4AF37 border gold */
+  /* Logo-inspired accent colors (kept names for component compatibility) */
+  --crimson: oklch(0.58 0.22 27);     /* #E62129 — exact logo red (sun) */
+  --teal: oklch(0.45 0.13 255);       /* remapped to brand blue */
+  --gold: oklch(0.78 0.14 85);        /* kept for "featured" badges only */
 
-  --destructive: oklch(0.58 0.20 25);
-  --border: oklch(0.9 0.01 168);
-  --input: oklch(0.92 0.01 168);
-  --ring: oklch(0.52 0.09 168);
+  --destructive: oklch(0.58 0.22 27);
+  --border: oklch(0.9 0.012 250);
+  --input: oklch(0.92 0.012 250);
+  --ring: oklch(0.45 0.13 255);
 
-  --chart-1: oklch(0.52 0.09 168);
-  --chart-2: oklch(0.58 0.20 25);
-  --chart-3: oklch(0.78 0.14 85);
-  --chart-4: oklch(0.42 0.07 178);
-  --chart-5: oklch(0.5 0.12 145);
+  --chart-1: oklch(0.45 0.13 255);    /* blue */
+  --chart-2: oklch(0.58 0.22 27);     /* red */
+  --chart-3: oklch(0.7 0.1 245);      /* lighter blue */
+  --chart-4: oklch(0.78 0.14 85);     /* gold */
+  --chart-5: oklch(0.55 0.15 250);    /* mid blue */
 
-  --sidebar: oklch(0.985 0.005 168);
-  --sidebar-foreground: oklch(0.25 0.035 172);
-  --sidebar-primary: oklch(0.52 0.09 168);
-  --sidebar-primary-foreground: oklch(0.99 0.01 95);
-  --sidebar-accent: oklch(0.94 0.025 168);
-  --sidebar-accent-foreground: oklch(0.42 0.07 178);
-  --sidebar-border: oklch(0.9 0.01 168);
-  --sidebar-ring: oklch(0.52 0.09 168);
+  --sidebar: oklch(0.985 0.006 250);
+  --sidebar-foreground: oklch(0.25 0.035 255);
+  --sidebar-primary: oklch(0.45 0.13 255);
+  --sidebar-primary-foreground: oklch(0.99 0.005 250);
+  --sidebar-accent: oklch(0.94 0.02 250);
+  --sidebar-accent-foreground: oklch(0.35 0.08 255);
+  --sidebar-border: oklch(0.9 0.012 250);
+  --sidebar-ring: oklch(0.45 0.13 255);
 }
 
 .dark {
-  --background: oklch(0.17 0.015 168);
-  --foreground: oklch(0.97 0.005 95);
+  --background: oklch(0.18 0.02 255);
+  --foreground: oklch(0.97 0.005 250);
 
-  --card: oklch(0.21 0.02 168);
-  --card-foreground: oklch(0.97 0.005 95);
+  --card: oklch(0.22 0.025 255);
+  --card-foreground: oklch(0.97 0.005 250);
 
-  --popover: oklch(0.21 0.02 168);
-  --popover-foreground: oklch(0.97 0.005 95);
+  --popover: oklch(0.22 0.025 255);
+  --popover-foreground: oklch(0.97 0.005 250);
 
-  --primary: oklch(0.7 0.1 168);
-  --primary-foreground: oklch(0.16 0.02 168);
+  --primary: oklch(0.7 0.12 255);
+  --primary-foreground: oklch(0.16 0.03 255);
 
-  --secondary: oklch(0.27 0.02 168);
-  --secondary-foreground: oklch(0.95 0.005 95);
+  --secondary: oklch(0.28 0.025 255);
+  --secondary-foreground: oklch(0.95 0.005 250);
 
-  --muted: oklch(0.26 0.015 168);
-  --muted-foreground: oklch(0.72 0.015 168);
+  --muted: oklch(0.27 0.02 255);
+  --muted-foreground: oklch(0.72 0.015 250);
 
-  --accent: oklch(0.3 0.03 168);
-  --accent-foreground: oklch(0.95 0.005 95);
+  --accent: oklch(0.31 0.03 255);
+  --accent-foreground: oklch(0.95 0.005 250);
 
-  --crimson: oklch(0.65 0.19 25);
-  --teal: oklch(0.65 0.09 178);
+  --crimson: oklch(0.65 0.21 27);
+  --teal: oklch(0.7 0.12 255);
   --gold: oklch(0.82 0.14 80);
 
-  --destructive: oklch(0.68 0.2 25);
+  --destructive: oklch(0.68 0.21 27);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.7 0.1 168);
+  --ring: oklch(0.7 0.12 255);
 
-  --sidebar: oklch(0.19 0.015 168);
-  --sidebar-foreground: oklch(0.95 0.005 95);
-  --sidebar-primary: oklch(0.7 0.1 168);
-  --sidebar-primary-foreground: oklch(0.16 0.02 168);
-  --sidebar-accent: oklch(0.27 0.02 168);
-  --sidebar-accent-foreground: oklch(0.95 0.005 95);
+  --sidebar: oklch(0.2 0.02 255);
+  --sidebar-foreground: oklch(0.95 0.005 250);
+  --sidebar-primary: oklch(0.7 0.12 255);
+  --sidebar-primary-foreground: oklch(0.16 0.03 255);
+  --sidebar-accent: oklch(0.28 0.025 255);
+  --sidebar-accent-foreground: oklch(0.95 0.005 250);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.7 0.1 168);
+  --sidebar-ring: oklch(0.7 0.12 255);
 }
 
 @layer base {

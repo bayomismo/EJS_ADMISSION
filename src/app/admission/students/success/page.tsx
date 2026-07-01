@@ -17,7 +17,7 @@ export default async function StudentSuccessPage({
     <PublicShell>
       <div className="mx-auto max-w-2xl px-4 py-16">
         <Card className="overflow-hidden p-0 text-center">
-          <div className="bg-gradient-to-l from-emerald-600 to-teal-600 p-8 text-white">
+          <div className="bg-gradient-to-l from-blue-700 to-blue-900 p-8 text-white">
             <CheckCircle2 className="mx-auto mb-3 h-16 w-16" />
             <h1 className="text-2xl font-extrabold">تم استلام طلبك بنجاح!</h1>
             <p className="mt-1 text-white/85">طلب التقديم للعام الدراسي 2026/2027</p>

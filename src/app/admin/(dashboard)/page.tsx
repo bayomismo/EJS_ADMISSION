@@ -41,10 +41,10 @@ export default async function AdminDashboardPage() {
   ]);
 
   const stats = [
-    { label: "إجمالي المدارس", value: schoolsCount, active: activeSchools, icon: Building2, color: "from-emerald-500 to-teal-600", href: "/admin/schools" },
+    { label: "إجمالي المدارس", value: schoolsCount, active: activeSchools, icon: Building2, color: "from-blue-600 to-blue-800", href: "/admin/schools" },
     { label: "المحافظات", value: governoratesCount, active: citiesCount, icon: Map, color: "from-rose-500 to-red-600", href: "/admin/governorates" },
     { label: "الأخبار", value: newsCount, active: publishedNews, icon: Newspaper, color: "from-amber-500 to-orange-600", href: "/admin/news" },
-    { label: "المستخدمون", value: usersCount, active: 0, icon: Users, color: "from-teal-500 to-cyan-600", href: "/admin/users" },
+    { label: "المستخدمون", value: usersCount, active: 0, icon: Users, color: "from-blue-600 to-blue-800", href: "/admin/users" },
   ];
 
   const statusColor =

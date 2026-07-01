@@ -11,7 +11,7 @@ const actionLabels: Record<string, { label: string; cls: string }> = {
   CREATE: { label: "إضافة", cls: "bg-emerald-100 text-emerald-700" },
   UPDATE: { label: "تعديل", cls: "bg-amber-100 text-amber-700" },
   DELETE: { label: "حذف", cls: "bg-rose-100 text-rose-700" },
-  LOGIN: { label: "دخول", cls: "bg-teal-100 text-teal-700" },
+  LOGIN: { label: "دخول", cls: "bg-blue-100 text-blue-700" },
   LOGOUT: { label: "خروج", cls: "bg-muted text-muted-foreground" },
   BULK: { label: "جماعي", cls: "bg-indigo-100 text-indigo-700" },
 };
