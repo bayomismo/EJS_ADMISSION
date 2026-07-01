@@ -38,6 +38,7 @@ export default async function StudentApplyPage() {
           schools={schools}
           grades={grades}
           admissionOpen={live.status === "OPEN"}
+          admissionYear={settings.admission.year}
         />
       </div>
     </PublicShell>

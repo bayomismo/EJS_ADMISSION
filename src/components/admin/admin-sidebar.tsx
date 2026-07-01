@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   LayoutDashboard, Building2, Map, MapPin, Newspaper, HelpCircle, FileText,
-  Megaphone, Image, Settings, Users, ScrollText, LogOut, Menu, X, Building, BarChart3,
+  Megaphone, Image, Settings, Users, ScrollText, LogOut, Menu, X, Building, BarChart3, GraduationCap,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,8 @@ const NAV_GROUPS: { title: string; items: { href: string; label: string; icon: a
     title: "النظام",
     items: [
       { href: "/admin/reports", label: "التقارير", icon: BarChart3, perm: "reports" },
+      { href: "/admin/reports/students", label: "طلبات الطلاب", icon: GraduationCap, perm: "reports" },
+      { href: "/admin/reports/teachers", label: "طلبات المعلمين", icon: Users, perm: "reports" },
       { href: "/admin/users", label: "المستخدمون", icon: Users, perm: "users" },
       { href: "/admin/audit", label: "سجل التغييرات", icon: ScrollText, perm: "audit" },
       { href: "/admin/settings", label: "الإعدادات", icon: Settings, perm: "settings" },
@@ -54,6 +56,11 @@ export function AdminSidebar({
   user: { name: string; email: string; roleName: string };
   permissions: string[];
 }) {
+  const roleName = user.roleName;
+  const isSuperOrAdmin = roleName === "super-admin" || roleName === "admin";
+  const canViewStudentApps = isSuperOrAdmin || roleName === "student-admission-manager";
+  const canViewTeacherApps = isSuperOrAdmin || roleName === "teacher-admission-manager";
+  const canViewReports = isSuperOrAdmin || roleName === "student-admission-manager" || roleName === "teacher-admission-manager";
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const perms = new Set(permissions);
@@ -93,7 +100,19 @@ export function AdminSidebar({
 
           <nav className="flex-1 space-y-5 overflow-y-auto p-4 scroll-area-custom">
             {NAV_GROUPS.map((group) => {
-              const visible = group.items.filter((it) => has(it.perm));
+              let visible = group.items.filter((it) => has(it.perm));
+              // Role-gate the reports sub-items
+              visible = visible.filter((it) => {
+                if (it.href === "/admin/reports/students") return canViewStudentApps;
+                if (it.href === "/admin/reports/teachers") return canViewTeacherApps;
+                if (it.href === "/admin/reports") return canViewReports;
+                // admission managers only see reports-related + dashboard; hide other system modules
+                if (!isSuperOrAdmin && (roleName === "student-admission-manager" || roleName === "teacher-admission-manager")) {
+                  // hide users/audit/settings from admission managers (they manage applications only)
+                  if (it.href === "/admin/users" || it.href === "/admin/settings") return false;
+                }
+                return true;
+              });
               if (visible.length === 0) return null;
               return (
                 <div key={group.title}>

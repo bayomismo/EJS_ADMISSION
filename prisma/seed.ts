@@ -168,6 +168,8 @@ async function main() {
     [SYSTEM_ROLES.ADMIN, "مدير"],
     [SYSTEM_ROLES.EDITOR, "محرر محتوى"],
     [SYSTEM_ROLES.VIEWER, "مشاهد"],
+    [SYSTEM_ROLES.STUDENT_ADMISSION_MANAGER, "مدير قبول الطلاب"],
+    [SYSTEM_ROLES.TEACHER_ADMISSION_MANAGER, "مدير قبول المعلمين"],
   ] as const) {
     const role = await db.role.upsert({
       where: { name: roleKey },
@@ -217,6 +219,36 @@ async function main() {
           isActive: true,
         },
         update: {},
+      });
+    }
+    // Student Admission Manager user
+    const studentMgrRole = await db.role.findUnique({ where: { name: SYSTEM_ROLES.STUDENT_ADMISSION_MANAGER } });
+    if (studentMgrRole) {
+      await db.user.upsert({
+        where: { email: "student.mgr@ejs.gov.eg" },
+        create: {
+          name: "مدير قبول الطلاب",
+          email: "student.mgr@ejs.gov.eg",
+          passwordHash: hashPassword("Student@123"),
+          roleId: studentMgrRole.id,
+          isActive: true,
+        },
+        update: { roleId: studentMgrRole.id, isActive: true },
+      });
+    }
+    // Teacher Admission Manager user
+    const teacherMgrRole = await db.role.findUnique({ where: { name: SYSTEM_ROLES.TEACHER_ADMISSION_MANAGER } });
+    if (teacherMgrRole) {
+      await db.user.upsert({
+        where: { email: "teacher.mgr@ejs.gov.eg" },
+        create: {
+          name: "مدير قبول المعلمين",
+          email: "teacher.mgr@ejs.gov.eg",
+          passwordHash: hashPassword("Teacher@123"),
+          roleId: teacherMgrRole.id,
+          isActive: true,
+        },
+        update: { roleId: teacherMgrRole.id, isActive: true },
       });
     }
   }

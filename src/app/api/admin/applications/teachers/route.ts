@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission, ok } from "@/lib/guards";
+import { requirePermission, requireAdmissionManager, ok } from "@/lib/guards";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const guard = await requirePermission("schools", "view");
+  const guard = await requireAdmissionManager("teacher");
   if (!guard.ok) return guard.response!;
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();

@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, ArrowRight, CheckCircle2, Loader2, AlertCircle,
-  User, Users, MapPin, FileCheck, ClipboardList,
+  User, Users, MapPin, FileCheck, ClipboardList, Mail, MailCheck,
+  IdCard, Calendar, GraduationCap, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,6 +18,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { TermsGate } from "@/components/public/terms-gate";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { computeStudentPlacement } from "@/lib/egyptian-id";
+import { toArabicNumber, toArabicDigits } from "@/lib/arabic";
 
 interface Gov { id: string; nameAr: string; }
 interface City { id: string; nameAr: string; governorateId: string; }
@@ -34,50 +37,99 @@ const STEPS: { key: Step; label: string; icon: any }[] = [
 ];
 
 export function StudentApplicationForm({
-  governorates, cities, schools, grades, admissionOpen,
+  governorates, cities, schools, grades, admissionOpen, admissionYear,
 }: {
   governorates: Gov[];
   cities: City[];
   schools: School[];
   grades: Grade[];
   admissionOpen: boolean;
+  admissionYear: string; // e.g. "2026/2027"
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("terms");
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState<any>({
-    studentNameAr: "", studentNameEn: "", birthDate: "", gender: "MALE", nationalId: "",
-    guardianName: "", guardianRelation: "father", guardianPhone: "", guardianEmail: "", guardianNationalId: "", guardianOccupation: "",
-    governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "", addressAr: "",
+    studentNameAr: "", studentNameEn: "", nationalId: "",
+    gender: "MALE",
+    // Parent email + confirmation (retype) — mandatory in step 1
+    guardianEmail: "", guardianEmailConfirm: "",
+    guardianName: "", guardianRelation: "father", guardianPhone: "",
+    guardianNationalId: "", guardianOccupation: "",
+    governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "",
+    addressAr: "",
     skillsAnswers: "", notes: "",
   });
 
-  const filteredCities = useMemo(() => cities.filter((c) => c.governorateId === form.governorateId), [cities, form.governorateId]);
-  const filteredSchools = useMemo(() => schools.filter((s) => s.governorateId === form.governorateId && s.cityId === form.cityId), [schools, form.governorateId, form.cityId]);
+  // ── CRITICAL: auto age + grade from Student ID (national ID) ──
+  // Year extracted from admission year string e.g. "2026/2027" → 2026
+  const admYear = useMemo(() => {
+    const m = admissionYear.match(/^(\d{4})/);
+    return m ? parseInt(m[1], 10) : new Date().getFullYear();
+  }, [admissionYear]);
+
+  const placement = useMemo(() => {
+    if (!form.nationalId || form.nationalId.length !== 14) return null;
+    return computeStudentPlacement(form.nationalId, admYear);
+  }, [form.nationalId, admYear]);
+
+  // auto-populate grade whenever the computed grade changes
+  const computedGrade = useMemo(() => {
+    if (!placement || !placement.parsed.valid || placement.age == null || !placement.grade) return null;
+    if (placement.grade.gradeId === "too-young" || placement.grade.gradeId === "too-old") return placement.grade;
+    // match DB grade by name
+    const dbGrade = grades.find((g) => g.nameAr === placement.grade!.gradeName);
+    if (dbGrade) return { gradeId: dbGrade.id, gradeName: dbGrade.nameAr };
+    return { gradeId: placement.grade.gradeId, gradeName: placement.grade.gradeName };
+  }, [placement, grades]);
+
+  // when computedGrade changes, sync into form.gradeId
+  const [lastSyncedGrade, setLastSyncedGrade] = useState<string | null>(null);
+  if (computedGrade && computedGrade.gradeId !== lastSyncedGrade) {
+    setLastSyncedGrade(computedGrade.gradeId);
+    if (form.gradeId !== computedGrade.gradeId) {
+      setForm((p: any) => ({ ...p, gradeId: computedGrade.gradeId, gender: placement?.gender || p.gender }));
+    }
+  }
+  if (!computedGrade && lastSyncedGrade) {
+    setLastSyncedGrade(null);
+    if (form.gradeId) setForm((p: any) => ({ ...p, gradeId: "" }));
+  }
 
   function set(k: string, v: any) { setForm((p: any) => ({ ...p, [k]: v })); }
+
+  const filteredCities = useMemo(() => cities.filter((c) => c.governorateId === form.governorateId), [cities, form.governorateId]);
+  const filteredSchools = useMemo(() => schools.filter((s) => s.governorateId === form.governorateId && s.cityId === form.cityId), [schools, form.governorateId, form.cityId]);
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
 
   function validateStep(s: Step): string | null {
     if (s === "student") {
       if (!form.studentNameAr || form.studentNameAr.length < 3) return "اسم الطالب مطلوب (٣ أحرف على الأقل)";
-      if (!form.birthDate) return "تاريخ الميلاد مطلوب";
-      if (!form.nationalId || form.nationalId.length !== 14) return "الرقم القومي للطالب مطلوب (١٤ رقم)";
+      if (!form.nationalId || form.nationalId.length !== 14) return "الرقم القومي (Student ID) مطلوب (١٤ رقم)";
+      if (placement && !placement.parsed.valid) return placement.parsed.error || "الرقم القومي غير صحيح";
+      // email mandatory + retype confirmation
+      if (!form.guardianEmail || !/^[^@]+@[^@]+\.[^@]+$/.test(form.guardianEmail)) return "بريد ولي الأمر الإلكتروني مطلوب وصحيح";
+      if (!form.guardianEmailConfirm) return "يجب إعادة كتابة البريد الإلكتروني للتأكيد";
+      if (form.guardianEmail !== form.guardianEmailConfirm) return "البريد الإلكتروني وتأكيده غير متطابقين";
+      // age/grade must be valid
+      if (computedGrade && (computedGrade.gradeId === "too-young" || computedGrade.gradeId === "too-old")) {
+        return computedGrade.gradeId === "too-young" ? "عمر الطفل أقل من المطلوب للقبول" : "عمر الطفل يتجاوز المراحل المتاحة";
+      }
+      if (!computedGrade || !form.gradeId) return "تعذّر تحديد المرحلة الدراسية من الرقم القومي";
     }
     if (s === "guardian") {
       if (!form.guardianName || form.guardianName.length < 3) return "اسم ولي الأمر مطلوب";
       if (!form.guardianPhone || form.guardianPhone.length < 10) return "رقم هاتف ولي الأمر مطلوب";
       if (!form.guardianNationalId || form.guardianNationalId.length !== 14) return "الرقم القومي لولي الأمر مطلوب (١٤ رقم)";
-      if (form.guardianEmail && !/^[^@]+@[^@]+\.[^@]+$/.test(form.guardianEmail)) return "البريد الإلكتروني غير صحيح";
+      if (!form.addressAr) return "العنوان مطلوب";
     }
     if (s === "placement") {
       if (!form.governorateId) return "اختر المحافظة";
       if (!form.cityId) return "اختر المدينة";
       if (!form.schoolId) return "اختر المدرسة";
-      if (!form.gradeId) return "اختر المرحلة الدراسية";
-      if (!form.addressAr) return "العنوان مطلوب";
+      if (!form.gradeId) return "المرحلة الدراسية غير محددة (تأكد من صحة الرقم القومي)";
     }
     return null;
   }
@@ -85,16 +137,15 @@ export function StudentApplicationForm({
   function next() {
     const err = validateStep(step);
     if (err) { toast.error(err); return; }
-    const nextIdx = stepIndex + 1;
-    if (nextIdx < STEPS.length) setStep(STEPS[nextIdx].key);
+    const ni = stepIndex + 1;
+    if (ni < STEPS.length) setStep(STEPS[ni].key);
   }
   function prev() {
-    const prevIdx = stepIndex - 1;
-    if (prevIdx >= 0) setStep(STEPS[prevIdx].key);
+    const pi = stepIndex - 1;
+    if (pi >= 0) setStep(STEPS[pi].key);
   }
 
   async function submit() {
-    // final validation
     for (const s of ["student", "guardian", "placement"] as Step[]) {
       const err = validateStep(s);
       if (err) { toast.error(err); setStep(s); return; }
@@ -104,7 +155,12 @@ export function StudentApplicationForm({
       const res = await fetch("/api/public/applications/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, termsAccepted: true, termsVersion: "2026-v1" }),
+        body: JSON.stringify({
+          ...form,
+          birthDate: placement?.birthDate ? placement.birthDate.toISOString().slice(0, 10) : "",
+          termsAccepted: true,
+          termsVersion: "2026-v1",
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "فشل إرسال الطلب");
@@ -141,13 +197,13 @@ export function StudentApplicationForm({
                 <div className={cn("flex flex-col items-center gap-1.5 px-2", !active && !done && "opacity-50")}>
                   <div className={cn(
                     "flex h-10 w-10 items-center justify-center rounded-full transition-colors",
-                    done ? "bg-emerald-600 text-white" : active ? "bg-crimson text-white" : "bg-secondary text-muted-foreground"
+                    done ? "bg-primary text-primary-foreground" : active ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
                   )}>
                     {done ? <CheckCircle2 className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
                   </div>
-                  <span className={cn("text-[11px] font-medium whitespace-nowrap", active && "text-crimson font-bold")}>{s.label}</span>
+                  <span className={cn("text-[11px] font-medium whitespace-nowrap", active && "text-primary font-bold")}>{s.label}</span>
                 </div>
-                {i < STEPS.length - 1 && <div className={cn("h-0.5 w-8 sm:w-16 mx-1", done ? "bg-emerald-600" : "bg-border")} />}
+                {i < STEPS.length - 1 && <div className={cn("h-0.5 w-8 sm:w-16 mx-1", done ? "bg-primary" : "bg-border")} />}
               </div>
             );
           })}
@@ -165,29 +221,127 @@ export function StudentApplicationForm({
       )}
 
       {step === "student" && (
-        <Card className="p-6 space-y-4">
-          <h2 className="text-lg font-bold flex items-center gap-2"><User className="h-5 w-5 text-crimson" /> بيانات الطالب</h2>
+        <Card className="p-6 space-y-5">
+          <h2 className="text-lg font-bold flex items-center gap-2"><User className="h-5 w-5 text-primary" /> بيانات الطالب</h2>
+
+          {/* Student identity */}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="اسم الطالب بالعربية *"><Input value={form.studentNameAr} onChange={(e) => set("studentNameAr", e.target.value)} placeholder="الاسم رباعي" /></Field>
             <Field label="الاسم بالإنجليزية (اختياري)"><Input value={form.studentNameEn} onChange={(e) => set("studentNameEn", e.target.value)} dir="ltr" /></Field>
-            <Field label="تاريخ الميلاد *"><Input type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} dir="ltr" /></Field>
-            <Field label="الرقم القومي للطالب * (١٤ رقم)">
-              <Input value={form.nationalId} onChange={(e) => set("nationalId", e.target.value.replace(/\D/g, "").slice(0, 14))} dir="ltr" placeholder="٠١٢٣٤٥٦٧٨٩٠١٢٣" className="nums" />
-            </Field>
           </div>
-          <Field label="النوع">
-            <RadioGroup value={form.gender} onValueChange={(v) => set("gender", v)} className="flex gap-4">
-              <div className="flex items-center gap-2"><RadioGroupItem value="MALE" id="g-m" /><Label htmlFor="g-m">ذكر</Label></div>
-              <div className="flex items-center gap-2"><RadioGroupItem value="FEMALE" id="g-f" /><Label htmlFor="g-f">أنثى</Label></div>
-            </RadioGroup>
-          </Field>
+
+          {/* Student ID — CRITICAL: triggers auto age + grade */}
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <IdCard className="h-3.5 w-3.5 text-primary" /> الرقم القومي للطالب (Student ID) *
+            </Label>
+            <Input
+              value={form.nationalId}
+              onChange={(e) => set("nationalId", e.target.value.replace(/\D/g, "").slice(0, 14))}
+              dir="ltr"
+              placeholder="٠١٢٣٤٥٦٧٨٩٠١٢٣"
+              className={cn("nums text-lg tracking-wider", form.nationalId.length === 14 && (computedGrade ? "border-emerald-500" : "border-rose-500"))}
+            />
+            <p className="text-[11px] text-muted-foreground">يتم تلقائياً حساب عمر الطالب وتحديد المرحلة المناسبة من الرقم القومي</p>
+          </div>
+
+          {/* ── CRITICAL: live age + grade display + alert ── */}
+          {form.nationalId.length === 14 && placement && (
+            <>
+              {placement.parsed.valid && placement.age != null ? (
+                <div className="space-y-3">
+                  {/* Age + grade alert banner */}
+                  <div className={cn(
+                    "rounded-xl border-2 p-4",
+                    computedGrade && (computedGrade.gradeId === "too-young" || computedGrade.gradeId === "too-old")
+                      ? "border-rose-300 bg-rose-50"
+                      : "border-emerald-300 bg-emerald-50"
+                  )}>
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className={cn("mt-0.5 h-5 w-5 shrink-0",
+                        computedGrade && (computedGrade.gradeId === "too-young" || computedGrade.gradeId === "too-old") ? "text-rose-600" : "text-emerald-600")} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-bold text-foreground">
+                            عمر الطالب في ١ أكتوبر {toArabicDigits(String(admYear))}: <span className="nums text-lg">{toArabicNumber(placement.age)}</span> سنة
+                          </span>
+                        </div>
+                        {computedGrade && (computedGrade.gradeId === "too-young" || computedGrade.gradeId === "too-old") ? (
+                          <p className="text-sm font-medium text-rose-700">{computedGrade.gradeName}</p>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-muted-foreground">المرحلة الدراسية المناسبة:</span>
+                            <Badge className="bg-primary text-primary-foreground">{computedGrade?.gradeName}</Badge>
+                          </div>
+                        )}
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          تاريخ الميلاد المستخرج: <span className="nums">{toArabicDigits(`${placement.parsed.year}/${String(placement.parsed.month).padStart(2, "0")}/${String(placement.parsed.day).padStart(2, "0")}`)}</span>
+                          {" "}• الجنس المستخرج: {placement.parsed.gender === "MALE" ? "ذكر" : "أنثى"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 flex items-start gap-1.5">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>تم تحديد المرحلة تلقائياً بناءً على العمر المحسوب. لن تحتاج لاختيار المرحلة في الخطوات التالية.</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border-2 border-rose-300 bg-rose-50 p-4 flex items-start gap-3">
+                  <AlertCircle className="mt-0.5 h-5 w-5 text-rose-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-rose-700">تنبيه: الرقم القومي غير صحيح</p>
+                    <p className="text-xs text-rose-600 mt-0.5">{placement.parsed.error}</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Parent email + retype confirmation — mandatory */}
+          <div className="rounded-xl border border-border bg-secondary/20 p-4 space-y-3">
+            <h3 className="text-sm font-bold flex items-center gap-1.5"><Mail className="h-4 w-4 text-primary" /> بريد ولي الأمر الإلكتروني (إلزامي)</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">البريد الإلكتروني *</Label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={form.guardianEmail} onChange={(e) => set("guardianEmail", e.target.value)} dir="ltr" type="email" placeholder="parent@example.com" className="pr-9" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs flex items-center gap-1">
+                  <MailCheck className="h-3.5 w-3.5 text-primary" /> تأكيد البريد الإلكتروني *
+                </Label>
+                <div className="relative">
+                  <MailCheck className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={form.guardianEmailConfirm}
+                    onChange={(e) => set("guardianEmailConfirm", e.target.value)}
+                    dir="ltr" type="email" placeholder="أعد كتابة البريد الإلكتروني" className="pr-9"
+                    aria-invalid={form.guardianEmailConfirm.length > 0 && form.guardianEmail !== form.guardianEmailConfirm}
+                  />
+                </div>
+                {form.guardianEmailConfirm.length > 0 && form.guardianEmail !== form.guardianEmailConfirm && (
+                  <p className="text-[11px] text-rose-600 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> البريد غير متطابق</p>
+                )}
+                {form.guardianEmailConfirm.length > 0 && form.guardianEmail === form.guardianEmailConfirm && (
+                  <p className="text-[11px] text-emerald-600 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> البريد متطابق</p>
+                )}
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground">يجب إعادة كتابة البريد الإلكتروني للتأكيد قبل المتابعة</p>
+          </div>
+
           <StepFooter onPrev={prev} onNext={next} nextLabel="التالي" />
         </Card>
       )}
 
       {step === "guardian" && (
         <Card className="p-6 space-y-4">
-          <h2 className="text-lg font-bold flex items-center gap-2"><Users className="h-5 w-5 text-crimson" /> بيانات ولي الأمر</h2>
+          <h2 className="text-lg font-bold flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> بيانات ولي الأمر</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="اسم ولي الأمر *"><Input value={form.guardianName} onChange={(e) => set("guardianName", e.target.value)} /></Field>
             <Field label="صلة القرابة">
@@ -201,7 +355,6 @@ export function StudentApplicationForm({
               </Select>
             </Field>
             <Field label="رقم الهاتف *"><Input value={form.guardianPhone} onChange={(e) => set("guardianPhone", e.target.value.replace(/[^\d+]/g, ""))} dir="ltr" placeholder="01XXXXXXXXX" /></Field>
-            <Field label="البريد الإلكتروني (اختياري)"><Input value={form.guardianEmail} onChange={(e) => set("guardianEmail", e.target.value)} dir="ltr" /></Field>
             <Field label="الرقم القومي لولي الأمر * (١٤ رقم)">
               <Input value={form.guardianNationalId} onChange={(e) => set("guardianNationalId", e.target.value.replace(/\D/g, "").slice(0, 14))} dir="ltr" className="nums" />
             </Field>
@@ -210,13 +363,31 @@ export function StudentApplicationForm({
           <Field label="عنوان السكن *">
             <Input value={form.addressAr} onChange={(e) => set("addressAr", e.target.value)} placeholder="العنوان بالتفصيل" />
           </Field>
+          {/* email shown read-only (already confirmed in step 1) */}
+          <div className="rounded-lg bg-secondary/30 p-3 text-sm flex items-center gap-2">
+            <Mail className="h-4 w-4 text-primary" />
+            <span className="text-muted-foreground">البريد المؤكد:</span>
+            <span className="font-medium" dir="ltr">{form.guardianEmail}</span>
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          </div>
           <StepFooter onPrev={prev} onNext={next} nextLabel="التالي" />
         </Card>
       )}
 
       {step === "placement" && (
         <Card className="p-6 space-y-4">
-          <h2 className="text-lg font-bold flex items-center gap-2"><MapPin className="h-5 w-5 text-crimson" /> اختيار المدرسة والمرحلة</h2>
+          <h2 className="text-lg font-bold flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /> اختيار المدرسة</h2>
+
+          {/* grade auto-set, shown read-only */}
+          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              <span className="text-sm text-muted-foreground">المرحلة الدراسية (محددة تلقائياً من العمر):</span>
+              <Badge className="bg-primary text-primary-foreground">{grades.find((g) => g.id === form.gradeId)?.nameAr || "—"}</Badge>
+              <span className="text-[11px] text-muted-foreground mr-auto">يُحدد النظام المرحلة تلقائياً</span>
+            </div>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="المحافظة *">
               <Select value={form.governorateId} onValueChange={(v) => { set("governorateId", v); set("cityId", ""); set("schoolId", ""); }}>
@@ -237,14 +408,8 @@ export function StudentApplicationForm({
               <SelectContent className="max-h-72">{filteredSchools.map((s) => <SelectItem key={s.id} value={s.id}>{s.nameAr} ({s.code})</SelectItem>)}</SelectContent>
             </Select>
           </Field>
-          <Field label="المرحلة الدراسية *">
-            <Select value={form.gradeId} onValueChange={(v) => set("gradeId", v)}>
-              <SelectTrigger><SelectValue placeholder="اختر المرحلة" /></SelectTrigger>
-              <SelectContent>{grades.map((g) => <SelectItem key={g.id} value={g.id}>{g.nameAr}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
           <Field label="المدرسة السابقة (إن وجدت)"><Input value={form.previousSchool} onChange={(e) => set("previousSchool", e.target.value)} /></Field>
-          <Field label="ملاحظات / مهارات الطالب (اختياري)">
+          <Field label="ملاحظات / مهارات الطفل (اختياري)">
             <Textarea value={form.skillsAnswers} onChange={(e) => set("skillsAnswers", e.target.value)} rows={3} placeholder="اذكر أي مهارات أو أنشطة يتمتع بها طفلك" />
           </Field>
           <StepFooter onPrev={prev} onNext={next} nextLabel="مراجعة الطلب" />
@@ -253,17 +418,18 @@ export function StudentApplicationForm({
 
       {step === "review" && (
         <Card className="p-6 space-y-4">
-          <h2 className="text-lg font-bold flex items-center gap-2"><ClipboardList className="h-5 w-5 text-crimson" /> مراجعة الطلب</h2>
+          <h2 className="text-lg font-bold flex items-center gap-2"><ClipboardList className="h-5 w-5 text-primary" /> مراجعة الطلب</h2>
           <div className="rounded-xl bg-secondary/30 p-4 text-sm space-y-3">
             <ReviewRow label="اسم الطالب" value={form.studentNameAr} />
             <ReviewRow label="الرقم القومي" value={form.nationalId} mono />
-            <ReviewRow label="تاريخ الميلاد" value={form.birthDate} mono />
+            <ReviewRow label="العمر في أكتوبر" value={placement?.age != null ? `${toArabicNumber(placement.age)} سنة` : "—"} />
+            <ReviewRow label="المرحلة" value={grades.find((g) => g.id === form.gradeId)?.nameAr} />
+            <ReviewRow label="البريد الإلكتروني" value={form.guardianEmail} mono />
             <ReviewRow label="ولي الأمر" value={`${form.guardianName} (${form.guardianRelation})`} />
             <ReviewRow label="الهاتف" value={form.guardianPhone} mono />
             <ReviewRow label="المحافظة" value={governorates.find((g) => g.id === form.governorateId)?.nameAr} />
             <ReviewRow label="المدينة" value={cities.find((c) => c.id === form.cityId)?.nameAr} />
             <ReviewRow label="المدرسة" value={schools.find((s) => s.id === form.schoolId)?.nameAr} />
-            <ReviewRow label="المرحلة" value={grades.find((g) => g.id === form.gradeId)?.nameAr} />
             <ReviewRow label="العنوان" value={form.addressAr} />
           </div>
           <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
@@ -272,7 +438,7 @@ export function StudentApplicationForm({
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={prev} className="flex-1 h-11"><ArrowRight className="ml-2 h-4 w-4" /> السابق</Button>
-            <Button onClick={submit} disabled={submitting} className="flex-1 h-11 bg-crimson hover:bg-crimson/90 text-white">
+            <Button onClick={submit} disabled={submitting} className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground">
               {submitting ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جارٍ الإرسال...</> : <><CheckCircle2 className="ml-2 h-4 w-4" /> تأكيد وإرسال الطلب</>}
             </Button>
           </div>
@@ -294,7 +460,7 @@ function StepFooter({ onPrev, onNext, nextLabel }: { onPrev: () => void; onNext:
   return (
     <div className="flex gap-2 pt-2">
       <Button variant="outline" onClick={onPrev} className="flex-1 h-11"><ArrowRight className="ml-2 h-4 w-4" /> السابق</Button>
-      <Button onClick={onNext} className="flex-1 h-11 bg-crimson hover:bg-crimson/90 text-white">{nextLabel} <ArrowLeft className="mr-2 h-4 w-4" /></Button>
+      <Button onClick={onNext} className="flex-1 h-11 bg-primary hover:bg-primary/90 text-primary-foreground">{nextLabel} <ArrowLeft className="mr-2 h-4 w-4" /></Button>
     </div>
   );
 }

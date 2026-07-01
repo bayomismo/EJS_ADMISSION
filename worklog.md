@@ -53,3 +53,32 @@ Stage Summary:
 - Student & Teacher admission flows are separate modules with mandatory terms-acknowledgment gate (scroll-to-read + checkbox + server-side enforcement + admission-status lockout when closed).
 - Admin Reports section: metrics dashboard (students by school/grade/governorate/status + teachers by subject/status) + full CRUD on submitted student & teacher records (view/edit/delete, audit-logged).
 - 4 new DB models, 7 new API routes, 8 new pages, 4 new components. All Arabic RTL, lint-clean, browser-verified.
+---
+Task ID: 3
+Agent: Lead Full Stack Engineer (Z.ai Code, main session)
+Task: Core edits — apply EJS logo colors globally, trim header nav, Student Admission form step-1 auto age/grade from Student ID + mandatory parent email with retype confirmation, two specialized admission-manager roles with RBAC.
+
+Work Log:
+- Extracted exact EJS logo colors via VLM: Primary Teal #0A7D6F, Secondary Teal #0A5D5A, Gold #D4AF37, Crimson #E63946. Converted to OKLCH and rewrote globals.css :root + .dark palettes so the entire system now derives its primary/secondary/accent/ring/chart/sidebar colors directly from the logo.
+- Header nav trimmed per spec: removed الأخبار، الأسئلة الشائعة، مركز المستندات، الإعلانات، عن المدارس، تواصل معنا. Kept only: الرئيسية، ابحث عن مدرسة، تقديم الطلاب، تقديم المعلمين.
+- Built src/lib/egyptian-id.ts: parses Egyptian 14-digit national ID (century digit → birth year, month, day, gender from 13th digit), calculates age as of October 1st of the admission year, maps age→grade (4=KG1…11=Grade 6) with gradeNames matching the seeded DB Grade.nameAr for direct id resolution.
+- Rewrote Student Application form Step 1 (بيانات الطالب) to contain ALL critical first-step logic: (a) mandatory parent email field, (b) "تأكيد البريد الإلكتروني" retype-confirmation field with live match/mismatch indicator (retype, not OTP — per user clarification), (c) Student ID (national ID) field that triggers useMemo → computeStudentPlacement → live alert banner showing "عمر الطالب في ١ أكتوبر ٢٠٢٦: N سنة" + auto-populated grade badge + extracted birth date + gender, (d) auto-syncs form.gradeId to the matched DB grade. Subsequent placement step shows grade read-only.
+- Fixed placement accessor bug (placement.valid → placement.parsed.valid, placement.year → placement.parsed.year, etc.).
+- Made parent email mandatory in the public submit API zod schema (guardianEmail: z.string().email() non-optional).
+- Added two new system roles to permissions matrix: STUDENT_ADMISSION_MANAGER ("مدير قبول الطلاب") and TEACHER_ADMISSION_MANAGER ("مدير قبول المعلمين"). Re-seeded roles + permissions + 2 new sample users (student.mgr@ejs.gov.eg/Student@123, teacher.mgr@ejs.gov.eg/Teacher@123). Updated Users manager role labels.
+- Built requireAdmissionManager(kind) guard in lib/guards.ts. Updated all 4 admin application APIs (students/teachers list + [id]) to use it — student routes require student-admission-manager (+admin/super), teacher routes require teacher-admission-manager (+admin/super). Reports metrics API gated to both managers + admin.
+- Server-side role gating on reports pages: /admin/reports (both managers + admin), /admin/reports/students (student manager + admin only — others see "صلاحية غير كافية"), /admin/reports/teachers (teacher manager + admin only).
+- Admin sidebar: added reports sub-items (طلبات الطلاب / طلبات المعلمين) with role-conditional visibility; admission managers see only dashboard + their permitted reports + audit (users/settings hidden from them).
+- Verification (Agent Browser end-to-end):
+  - Homepage: logo in header, teal logo palette applied (VLM confirmed). Header nav has only 4 items.
+  - Student apply: terms gate passed → Step 1: entered Student ID "32001151234567" → alert displayed "عمر الطالب في ١ أكتوبر ٢٠٢٦: ٦ سنة" + "المرحلة الدراسية المناسبة: الصف الأول الابتدائي" + birth date ٢٠٢٠/٠١/١٥. Email + retype match indicator works. Advanced to Step 2 after valid completion.
+  - Age-calc unit tests: born 2020→age 6→G1, born 2019→age 7→G2, born 2018→age 8→G3 — all correct.
+  - Role access: student.mgr login → can access /admin/reports/students, blocked from /admin/reports/teachers ("صلاحية غير كافية"). teacher.mgr login → blocked from students, can access teachers. Symmetric and correct.
+  - Lint: 0 errors. All routes 200. No runtime errors.
+
+Stage Summary:
+- EJS logo colors (teal #0A7D6F / gold #D4AF37 / crimson #E63946) now drive the entire design system palette.
+- Header nav trimmed to 4 items per spec.
+- Student Admission Step 1 (most critical feature): parent email (mandatory) + retype-email confirmation + Student ID → automatic age calculation as of Oct 1 of admission year + prominent alert + automatic grade population — all live in the first step.
+- Two specialized roles (Student Admission Manager, Teacher Admission Manager) created, seeded with sample users, and enforced at both API and page level. Admin assigns these roles via the Users manager. Each manager can only access their respective admission section.
+- Admin login accounts: admin@ejs.gov.eg/Admin@123 (super), student.mgr@ejs.gov.eg/Student@123 (student mgr), teacher.mgr@ejs.gov.eg/Teacher@123 (teacher mgr).

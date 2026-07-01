@@ -79,8 +79,10 @@ export interface GradeInfo {
 }
 
 export const AGE_GRADE_MAP: { gradeId: string; gradeName: string; minAge: number; maxAge: number }[] = [
-  { gradeId: "kg1", gradeName: "رياض أطفال - مستوى أول (KG1)", minAge: 4, maxAge: 4 },
-  { gradeId: "kg2", gradeName: "رياض أطفال - مستوى ثاني (KG2)", minAge: 5, maxAge: 5 },
+  // gradeName values match the seeded DB Grade.nameAr exactly so auto-populate
+  // can resolve the gradeId by name lookup.
+  { gradeId: "kg1", gradeName: "رياض أطفال 1", minAge: 4, maxAge: 4 },
+  { gradeId: "kg2", gradeName: "رياض أطفال 2", minAge: 5, maxAge: 5 },
   { gradeId: "g1", gradeName: "الصف الأول الابتدائي", minAge: 6, maxAge: 6 },
   { gradeId: "g2", gradeName: "الصف الثاني الابتدائي", minAge: 7, maxAge: 7 },
   { gradeId: "g3", gradeName: "الصف الثالث الابتدائي", minAge: 8, maxAge: 8 },

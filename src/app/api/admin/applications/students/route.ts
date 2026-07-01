@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission, ok, fail } from "@/lib/guards";
+import { requirePermission, requireAdmissionManager, ok, fail } from "@/lib/guards";
 import { logAudit } from "@/lib/audit";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 // GET /api/admin/applications/students?q=&status=&schoolId=&governorateId=&gradeId=&page=
 export async function GET(req: NextRequest) {
-  const guard = await requirePermission("schools", "view");
+  const guard = await requireAdmissionManager("student");
   if (!guard.ok) return guard.response!;
 
   const { searchParams } = new URL(req.url);

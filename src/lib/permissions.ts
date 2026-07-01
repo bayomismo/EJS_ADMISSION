@@ -39,6 +39,8 @@ export const SYSTEM_ROLES = {
   ADMIN: "admin",
   EDITOR: "content-editor",
   VIEWER: "viewer",
+  STUDENT_ADMISSION_MANAGER: "student-admission-manager",
+  TEACHER_ADMISSION_MANAGER: "teacher-admission-manager",
 } as const;
 
 // Permission matrix per system role: "*" = all actions on module
@@ -98,6 +100,23 @@ export const ROLE_PERMISSION_MATRIX: Record<string, Record<string, string[]>> = 
     menus: ["view"],
     users: ["view"],
     roles: ["view"],
+    settings: ["view"],
+    audit: ["view"],
+  },
+  [SYSTEM_ROLES.STUDENT_ADMISSION_MANAGER]: {
+    dashboard: ["view"],
+    reports: ["view"],
+    schools: ["view"],
+    governorates: ["view"],
+    cities: ["view"],
+    settings: ["view"],
+    audit: ["view"],
+  },
+  [SYSTEM_ROLES.TEACHER_ADMISSION_MANAGER]: {
+    dashboard: ["view"],
+    reports: ["view"],
+    schools: ["view"],
+    governorates: ["view"],
     settings: ["view"],
     audit: ["view"],
   },

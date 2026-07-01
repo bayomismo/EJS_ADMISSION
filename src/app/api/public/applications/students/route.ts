@@ -9,15 +9,15 @@ const schema = z.object({
   // student
   studentNameAr: z.string().min(3),
   studentNameEn: z.string().optional().nullable(),
-  birthDate: z.string().min(6),
+  birthDate: z.string().min(6), // derived from national ID client-side
   gender: z.enum(["MALE", "FEMALE", "MIXED"]),
   nationalId: z.string().length(14),
   nationality: z.string().default("مصري"),
-  // guardian
+  // guardian — parent email is now MANDATORY
   guardianName: z.string().min(3),
   guardianRelation: z.string().min(2),
   guardianPhone: z.string().min(10),
-  guardianEmail: z.string().email().optional().nullable(),
+  guardianEmail: z.string().email("بريد ولي الأمر الإلكتروني مطلوب وصحيح"),
   guardianNationalId: z.string().length(14),
   guardianOccupation: z.string().optional().nullable(),
   // placement

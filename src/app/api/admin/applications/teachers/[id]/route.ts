@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission, ok, fail } from "@/lib/guards";
+import { requirePermission, requireAdmissionManager, ok, fail } from "@/lib/guards";
 import { logAudit } from "@/lib/audit";
 import { z } from "zod";
 import { getServerSession } from "next-auth";
@@ -21,7 +21,7 @@ const updateSchema = z.object({
 });
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const guard = await requirePermission("schools", "view");
+  const guard = await requireAdmissionManager("teacher");
   if (!guard.ok) return guard.response!;
   const { id } = await params;
   const app = await db.teacherApplication.findUnique({
@@ -33,7 +33,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const guard = await requirePermission("schools", "update");
+  const guard = await requireAdmissionManager("teacher");
   if (!guard.ok) return guard.response!;
   const { id } = await params;
   const body = await req.json().catch(() => null);
@@ -57,7 +57,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const guard = await requirePermission("schools", "delete");
+  const guard = await requireAdmissionManager("teacher");
   if (!guard.ok) return guard.response!;
   const { id } = await params;
   const old = await db.teacherApplication.findUnique({ where: { id } });

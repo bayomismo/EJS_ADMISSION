@@ -16,7 +16,14 @@ import { toArabicDigits } from "@/lib/arabic";
 interface UserItem { id: string; name: string; email: string; roleId: string; isActive: boolean; lastLoginAt: string | null; createdAt: string; role: { id: string; name: string; description: string | null }; }
 interface Role { id: string; name: string; description: string | null; _count?: { users: number }; }
 
-const roleLabels: Record<string, string> = { "super-admin": "مدير عام", admin: "مدير", "content-editor": "محرر محتوى", viewer: "مشاهد" };
+const roleLabels: Record<string, string> = {
+  "super-admin": "مدير عام",
+  admin: "مدير",
+  "content-editor": "محرر محتوى",
+  viewer: "مشاهد",
+  "student-admission-manager": "مدير قبول الطلاب",
+  "teacher-admission-manager": "مدير قبول المعلمين",
+};
 
 export function UsersManager({ roles }: { roles: Role[] }) {
   const [items, setItems] = useState<UserItem[]>([]);

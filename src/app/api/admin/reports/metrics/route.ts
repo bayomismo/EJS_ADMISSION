@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requirePermission, ok } from "@/lib/guards";
+import { getAdminSession, ok } from "@/lib/guards";
+import { SYSTEM_ROLES } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/admin/reports/metrics — aggregated admission metrics
+// Accessible to super-admin, admin, student-admission-manager, teacher-admission-manager
 export async function GET() {
-  const guard = await requirePermission("schools", "view");
-  if (!guard.ok) return guard.response!;
+  const session = await getAdminSession();
+  if (!session?.user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
+  const roleName = (session.user as any).roleName as string;
+  const allowed = [
+    SYSTEM_ROLES.SUPER_ADMIN, SYSTEM_ROLES.ADMIN,
+    SYSTEM_ROLES.STUDENT_ADMISSION_MANAGER, SYSTEM_ROLES.TEACHER_ADMISSION_MANAGER,
+  ];
+  if (!allowed.includes(roleName)) {
+    return NextResponse.json({ error: "هذا القسم مخصص فقط لمديري القبول" }, { status: 403 });
+  }
 
   const [
     totalStudents, studentsByStatus, studentsByGrade, studentsByGovernorate, studentsBySchool,
