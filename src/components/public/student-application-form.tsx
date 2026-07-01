@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft, ArrowRight, CheckCircle2, Loader2, AlertCircle,
@@ -50,17 +50,55 @@ export function StudentApplicationForm({
   const [step, setStep] = useState<Step>("terms");
   const [submitting, setSubmitting] = useState(false);
 
-  const [form, setForm] = useState<any>({
-    studentNameAr: "", studentNameEn: "", nationalId: "",
-    gender: "MALE",
-    // Parent email + confirmation (retype) — mandatory in step 1
-    guardianEmail: "", guardianEmailConfirm: "",
-    guardianName: "", guardianRelation: "father", guardianPhone: "",
-    guardianNationalId: "", guardianOccupation: "",
-    governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "",
-    addressAr: "",
-    skillsAnswers: "", notes: "",
+  const STORAGE_KEY = "ejs-student-application-draft";
+  const [form, setForm] = useState<any>(() => {
+    if (typeof window === "undefined") {
+      return {
+        studentNameAr: "", studentNameEn: "", nationalId: "",
+        gender: "MALE",
+        guardianEmail: "", guardianEmailConfirm: "",
+        guardianName: "", guardianRelation: "father", guardianPhone: "",
+        guardianNationalId: "", guardianOccupation: "",
+        governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "",
+        addressAr: "",
+        skillsAnswers: "", notes: "",
+      };
+    }
+    try {
+      const raw = window.sessionStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const restored = JSON.parse(raw);
+        return { ...{
+          studentNameAr: "", studentNameEn: "", nationalId: "",
+          gender: "MALE",
+          guardianEmail: "", guardianEmailConfirm: "",
+          guardianName: "", guardianRelation: "father", guardianPhone: "",
+          guardianNationalId: "", guardianOccupation: "",
+          governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "",
+          addressAr: "",
+          skillsAnswers: "", notes: "",
+        }, ...restored };
+      }
+    } catch { /* ignore */ }
+    return {
+      studentNameAr: "", studentNameEn: "", nationalId: "",
+      gender: "MALE",
+      guardianEmail: "", guardianEmailConfirm: "",
+      guardianName: "", guardianRelation: "father", guardianPhone: "",
+      guardianNationalId: "", guardianOccupation: "",
+      governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "",
+      addressAr: "",
+      skillsAnswers: "", notes: "",
+    };
   });
+
+  // Persist on every change. Skip during initial SSR (window is undefined).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(form));
+    } catch { /* quota */ }
+  }, [form]);
 
   // ── CRITICAL: auto age + grade from Student ID (national ID) ──
   // Year extracted from admission year string e.g. "2026/2027" → 2026
@@ -84,18 +122,25 @@ export function StudentApplicationForm({
     return { gradeId: placement.grade.gradeId, gradeName: placement.grade.gradeName };
   }, [placement, grades]);
 
-  // when computedGrade changes, sync into form.gradeId
-  const [lastSyncedGrade, setLastSyncedGrade] = useState<string | null>(null);
-  if (computedGrade && computedGrade.gradeId !== lastSyncedGrade) {
-    setLastSyncedGrade(computedGrade.gradeId);
-    if (form.gradeId !== computedGrade.gradeId) {
-      setForm((p: any) => ({ ...p, gradeId: computedGrade.gradeId, gender: placement?.gender || p.gender }));
+  // Sync the computed grade into form.gradeId via effect (NOT during render).
+  // The previous render-time setForm broke under React 19 concurrent mode.
+  const lastSyncedGradeRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!computedGrade) {
+      if (lastSyncedGradeRef.current !== null) {
+        lastSyncedGradeRef.current = null;
+        setForm((p: any) => (p.gradeId ? { ...p, gradeId: "" } : p));
+      }
+      return;
     }
-  }
-  if (!computedGrade && lastSyncedGrade) {
-    setLastSyncedGrade(null);
-    if (form.gradeId) setForm((p: any) => ({ ...p, gradeId: "" }));
-  }
+    if (computedGrade.gradeId !== lastSyncedGradeRef.current) {
+      lastSyncedGradeRef.current = computedGrade.gradeId;
+      setForm((p: any) => {
+        if (p.gradeId === computedGrade.gradeId) return p;
+        return { ...p, gradeId: computedGrade.gradeId, gender: placement?.gender || p.gender };
+      });
+    }
+  }, [computedGrade, placement?.gender]);
 
   function set(k: string, v: any) { setForm((p: any) => ({ ...p, [k]: v })); }
 
@@ -243,6 +288,25 @@ export function StudentApplicationForm({
               className={cn("nums text-lg tracking-wider", form.nationalId.length === 14 && (computedGrade ? "border-emerald-500" : "border-rose-500"))}
             />
             <p className="text-[11px] text-muted-foreground">يتم تلقائياً حساب عمر الطالب وتحديد المرحلة المناسبة من الرقم القومي</p>
+            <details className="text-[11px] text-muted-foreground">
+              <summary className="cursor-pointer hover:text-foreground transition-colors">
+                أين أجد الرقم القومي للطالب على شهادة الميلاد؟
+              </summary>
+              <div className="mt-2 rounded-lg border border-border bg-secondary/20 p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/id-reference.svg"
+                  alt="مكان الرقم القومي في شهادة الميلاد — مربع أحمر يحدد الـ ١٤ رقم"
+                  className="w-full h-auto rounded"
+                  width={600}
+                  height={360}
+                />
+                <p className="mt-1.5 text-[10px]">
+                  الرقم القومي المكوّن من ١٤ رقم موجود في شهادة الميلاد المصرية
+                  (الإصدار الحديث). أدخله كما هو بدون أي فواصل.
+                </p>
+              </div>
+            </details>
           </div>
 
           {/* ── CRITICAL: live age + grade display + alert ── */}

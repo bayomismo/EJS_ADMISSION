@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { randomBytes } from "crypto";
 import { hashPassword } from "../src/lib/password";
 import {
   SYSTEM_PERMISSIONS,
@@ -9,6 +10,31 @@ import {
 import { DEFAULT_SETTINGS, SETTING_KEYS } from "../src/lib/constants";
 
 const db = new PrismaClient();
+
+/**
+ * Generate a random password for seeded users. Each invocation mints a new one;
+ * the seed prints the credentials once and never stores or repeats them.
+ * Operators MUST capture the printed passwords and rotate them after first login.
+ */
+function generateRandomPassword(length = 16): string {
+  const charset =
+    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
+  const bytes = randomBytes(length);
+  let pw = "";
+  for (let i = 0; i < length; i++) pw += charset[bytes[i] % charset.length];
+  return pw;
+}
+
+/**
+ * Refuse to run in production without an explicit env flag. Without this guard,
+ * the seed would happily create system users with known passwords in prod.
+ */
+if (process.env.NODE_ENV === "production" && process.env.ALLOW_PROD_SEED !== "1") {
+  console.error(
+    "Refusing to seed in production. Set ALLOW_PROD_SEED=1 if you really mean it.",
+  );
+  process.exit(1);
+}
 
 // 27 Egyptian governorates with English names
 const GOVERNORATES: { nameAr: string; nameEn: string }[] = [
@@ -194,6 +220,14 @@ async function main() {
   }
 
   // ── Super Admin User ──
+  // Generate random passwords for seeded users; print them once below.
+  // Operators MUST capture these and rotate them after first login.
+  const seedUsers = {
+    admin:        { email: "admin@ejs.gov.eg",        password: generateRandomPassword() },
+    editor:       { email: "editor@ejs.gov.eg",       password: generateRandomPassword() },
+    studentMgr:   { email: "student.mgr@ejs.gov.eg",  password: generateRandomPassword() },
+    teacherMgr:   { email: "teacher.mgr@ejs.gov.eg",  password: generateRandomPassword() },
+  };
   const superRole = await db.role.findUnique({ where: { name: SYSTEM_ROLES.SUPER_ADMIN } });
   if (superRole) {
     await db.user.upsert({
@@ -201,11 +235,13 @@ async function main() {
       create: {
         name: "المدير العام",
         email: "admin@ejs.gov.eg",
-        passwordHash: hashPassword("Admin@123"),
+        passwordHash: hashPassword(seedUsers.admin.password),
         roleId: superRole.id,
         isActive: true,
+        mustChangePassword: true,
+        scope: null, // super-admin = full access
       },
-      update: { roleId: superRole.id, isActive: true },
+      update: { roleId: superRole.id, isActive: true, scope: null },
     });
     const editorRole = await db.role.findUnique({ where: { name: SYSTEM_ROLES.EDITOR } });
     if (editorRole) {
@@ -214,41 +250,54 @@ async function main() {
         create: {
           name: "محرر المحتوى",
           email: "editor@ejs.gov.eg",
-          passwordHash: hashPassword("Editor@123"),
+          passwordHash: hashPassword(seedUsers.editor.password),
           roleId: editorRole.id,
           isActive: true,
+          mustChangePassword: true,
+          scope: null, // editor = full content access
         },
-        update: {},
+        update: { scope: null },
       });
     }
-    // Student Admission Manager user
+    // Student Admission Manager user — scoped to a sample school on first seed
     const studentMgrRole = await db.role.findUnique({ where: { name: SYSTEM_ROLES.STUDENT_ADMISSION_MANAGER } });
     if (studentMgrRole) {
+      // Default scope: a single school (EJS-CAI-001) so the demo user can see
+      // exactly the rows they would manage in production. Operators may widen
+      // this through the Users manager UI (out of scope for this sprint).
+      const sampleSchool = await db.school.findUnique({ where: { code: "EJS-CAI-001" } });
+      const scope = sampleSchool ? JSON.stringify({ schoolIds: [sampleSchool.id] }) : null;
       await db.user.upsert({
         where: { email: "student.mgr@ejs.gov.eg" },
         create: {
           name: "مدير قبول الطلاب",
           email: "student.mgr@ejs.gov.eg",
-          passwordHash: hashPassword("Student@123"),
+          passwordHash: hashPassword(seedUsers.studentMgr.password),
           roleId: studentMgrRole.id,
           isActive: true,
+          mustChangePassword: true,
+          scope,
         },
-        update: { roleId: studentMgrRole.id, isActive: true },
+        update: { roleId: studentMgrRole.id, isActive: true, scope },
       });
     }
-    // Teacher Admission Manager user
+    // Teacher Admission Manager user — scoped to a sample governorate
     const teacherMgrRole = await db.role.findUnique({ where: { name: SYSTEM_ROLES.TEACHER_ADMISSION_MANAGER } });
     if (teacherMgrRole) {
+      const sampleGov = await db.governorate.findUnique({ where: { nameAr: "القاهرة" } });
+      const scope = sampleGov ? JSON.stringify({ governorateIds: [sampleGov.id] }) : null;
       await db.user.upsert({
         where: { email: "teacher.mgr@ejs.gov.eg" },
         create: {
           name: "مدير قبول المعلمين",
           email: "teacher.mgr@ejs.gov.eg",
-          passwordHash: hashPassword("Teacher@123"),
+          passwordHash: hashPassword(seedUsers.teacherMgr.password),
           roleId: teacherMgrRole.id,
           isActive: true,
+          mustChangePassword: true,
+          scope,
         },
-        update: { roleId: teacherMgrRole.id, isActive: true },
+        update: { roleId: teacherMgrRole.id, isActive: true, scope },
       });
     }
   }
@@ -591,8 +640,15 @@ async function main() {
   }
 
   console.log("✅ Seed complete");
-  console.log("   Admin login: admin@ejs.gov.eg / Admin@123");
-  console.log("   Editor login: editor@ejs.gov.eg / Editor@123");
+  console.log("");
+  console.log("   ⚠️  CAPTURE THESE CREDENTIALS NOW — they are printed only once.");
+  console.log("       Each user must change their password on first login.");
+  console.log("");
+  console.log(`   Super Admin:          ${seedUsers.admin.email}      / ${seedUsers.admin.password}`);
+  console.log(`   Content Editor:       ${seedUsers.editor.email}     / ${seedUsers.editor.password}`);
+  console.log(`   Student Admis Mgr:    ${seedUsers.studentMgr.email} / ${seedUsers.studentMgr.password}`);
+  console.log(`   Teacher Admis Mgr:    ${seedUsers.teacherMgr.email} / ${seedUsers.teacherMgr.password}`);
+  console.log("");
   console.log(`   ${schoolsData.length} schools, ${GOVERNORATES.length} governorates seeded`);
 }
 

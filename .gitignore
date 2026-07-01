@@ -33,6 +33,12 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# runtime upload storage (non-served, owned by the app)
+var/
+
+# legacy public uploads (no longer used)
+public/uploads/
+
 # vercel
 .vercel
 
@@ -51,4 +57,6 @@ prompt
 
 server.log
 # Skills directory
-/skills/
+/skills/test-pw.ts
+reset.ts
+test-pw.ts

@@ -4,6 +4,11 @@ import { FaqClient } from "@/components/public/faq-client";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "الأسئلة الشائعة | المدارس المصرية اليابانية",
+  description: "أجوبة عن الأسئلة الأكثر شيوعاً حول التقديم والمناهج والقبول",
+};
+
 export default async function FaqPage() {
   const [categories, items] = await Promise.all([
     db.faqCategory.findMany({ orderBy: { sortOrder: "asc" } }),

@@ -96,6 +96,12 @@ export async function PUT(req: NextRequest) {
     req,
   });
 
+  // Invalidate ISR pages that depend on settings.
+  const { revalidatePath } = await import("next/cache");
+  revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/contact");
+
   return ok(s);
 }
 

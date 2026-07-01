@@ -5,13 +5,16 @@ import {
   type SiteSettings,
   type AdmissionSettings,
 } from "@/lib/constants";
-import { cacheDelete, cacheMemo } from "@/lib/cache";
+import { tagged, revalidateTag, TAGS } from "@/lib/cache";
 
 // Read a single settings group as typed object
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
-  const row = await db.setting.findUnique({ where: { key } });
-  if (!row) return fallback;
+  // Fail-safe: if the DB is unreachable (build-time prerender against an
+  // empty Neon DB, before migrations, etc.) return the default settings
+  // so the page renders instead of crashing the build.
   try {
+    const row = await db.setting.findUnique({ where: { key } });
+    if (!row) return fallback;
     return JSON.parse(row.value) as T;
   } catch {
     return fallback;
@@ -25,12 +28,15 @@ export async function setSetting<T>(key: string, group: string, value: T): Promi
     create: { key, value: json, group },
     update: { value: json, group },
   });
-  cacheDelete("settings:");
+  revalidateTag(TAGS.SETTINGS);
 }
 
-// Full settings object (cached)
-export async function getSiteSettings(): Promise<SiteSettings> {
-  return cacheMemo("settings:all", 60_000, async () => {
+// Full settings object — wrapped in unstable_cache with the SETTINGS tag
+// so a write triggers a revalidation across the cluster.
+export const getSiteSettings = tagged(
+  TAGS.SETTINGS,
+  60,
+  async (): Promise<SiteSettings> => {
     const [admission, branding, contact, social, seo, general] = await Promise.all([
       getSetting(SETTING_KEYS.admission, DEFAULT_SETTINGS.admission),
       getSetting(SETTING_KEYS.branding, DEFAULT_SETTINGS.branding),
@@ -40,8 +46,8 @@ export async function getSiteSettings(): Promise<SiteSettings> {
       getSetting(SETTING_KEYS.general, DEFAULT_SETTINGS.general),
     ]);
     return { admission, branding, contact, social, seo, general } as SiteSettings;
-  });
-}
+  },
+);
 
 export async function getAdmissionSettings(): Promise<AdmissionSettings> {
   const all = await getSiteSettings();

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getAdminSession, ok } from "@/lib/guards";
+import { getAdminSession, requireAdmissionManager, ok } from "@/lib/guards";
 import { SYSTEM_ROLES } from "@/lib/permissions";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/admin/reports/metrics — aggregated admission metrics
 // Accessible to super-admin, admin, student-admission-manager, teacher-admission-manager
+// Scope-restricted for the manager roles.
 export async function GET() {
   const session = await getAdminSession();
   if (!session?.user) return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
@@ -19,24 +21,55 @@ export async function GET() {
     return NextResponse.json({ error: "هذا القسم مخصص فقط لمديري القبول" }, { status: 403 });
   }
 
+  // Resolve the caller's scope once, up front.
+  const userId = (session.user as any).id as string;
+  const isUnrestricted = roleName === SYSTEM_ROLES.SUPER_ADMIN || roleName === SYSTEM_ROLES.ADMIN;
+  let scope: { schoolIds: string[] | null; governorateIds: string[] | null } = {
+    schoolIds: null, governorateIds: null,
+  };
+  if (!isUnrestricted) {
+    const u = await db.user.findUnique({ where: { id: userId }, select: { scope: true } });
+    if (u?.scope) {
+      try {
+        const p = JSON.parse(u.scope);
+        scope = {
+          schoolIds: Array.isArray(p.schoolIds) ? p.schoolIds : null,
+          governorateIds: Array.isArray(p.governorateIds) ? p.governorateIds : null,
+        };
+      } catch { scope = { schoolIds: [], governorateIds: [] }; }
+    }
+  }
+
+  // Build scoped `where` fragments for student and teacher queries.
+  const studentWhere: Prisma.StudentApplicationWhereInput =
+    scope.schoolIds !== null
+      ? { schoolId: scope.schoolIds.length === 0 ? { in: [] } : { in: scope.schoolIds } }
+      : scope.governorateIds !== null
+      ? { governorateId: scope.governorateIds.length === 0 ? { in: [] } : { in: scope.governorateIds } }
+      : {};
+  const teacherWhere: Prisma.TeacherApplicationWhereInput =
+    scope.governorateIds !== null
+      ? { preferredGovernorateId: scope.governorateIds.length === 0 ? { in: [] } : { in: scope.governorateIds } }
+      : {};
+
   const [
     totalStudents, studentsByStatus, studentsByGrade, studentsByGovernorate, studentsBySchool,
     recentStudents, studentsByDay,
     totalTeachers, teachersByStatus, teachersBySubject, teachersByGovernorate,
     recentTeachers,
   ] = await Promise.all([
-    db.studentApplication.count(),
-    db.studentApplication.groupBy({ by: ["status"], _count: true }),
-    db.studentApplication.groupBy({ by: ["gradeId"], _count: true }),
-    db.studentApplication.groupBy({ by: ["governorateId"], _count: true }),
-    db.studentApplication.groupBy({ by: ["schoolId"], _count: true }),
-    db.studentApplication.findMany({ take: 5, orderBy: { submittedAt: "desc" }, include: { school: { select: { nameAr: true } }, grade: { select: { nameAr: true } } } }),
-    db.studentApplication.findMany({ select: { submittedAt: true }, orderBy: { submittedAt: "desc" }, take: 200 }),
-    db.teacherApplication.count(),
-    db.teacherApplication.groupBy({ by: ["status"], _count: true }),
-    db.teacherApplication.groupBy({ by: ["subjects"], _count: true }),
-    db.teacherApplication.groupBy({ by: ["preferredGovernorateId"], _count: true }),
-    db.teacherApplication.findMany({ take: 5, orderBy: { submittedAt: "desc" }, include: { preferredGovernorate: { select: { nameAr: true } } } }),
+    db.studentApplication.count({ where: studentWhere }),
+    db.studentApplication.groupBy({ by: ["status"], where: studentWhere, _count: true }),
+    db.studentApplication.groupBy({ by: ["gradeId"], where: studentWhere, _count: true }),
+    db.studentApplication.groupBy({ by: ["governorateId"], where: studentWhere, _count: true }),
+    db.studentApplication.groupBy({ by: ["schoolId"], where: studentWhere, _count: true }),
+    db.studentApplication.findMany({ where: studentWhere, take: 5, orderBy: { submittedAt: "desc" }, include: { school: { select: { nameAr: true } }, grade: { select: { nameAr: true } } } }),
+    db.studentApplication.findMany({ where: studentWhere, select: { submittedAt: true }, orderBy: { submittedAt: "desc" }, take: 200 }),
+    db.teacherApplication.count({ where: teacherWhere }),
+    db.teacherApplication.groupBy({ by: ["status"], where: teacherWhere, _count: true }),
+    db.teacherApplication.groupBy({ by: ["subjects"], where: teacherWhere, _count: true }),
+    db.teacherApplication.groupBy({ by: ["preferredGovernorateId"], where: teacherWhere, _count: true }),
+    db.teacherApplication.findMany({ where: teacherWhere, take: 5, orderBy: { submittedAt: "desc" }, include: { preferredGovernorate: { select: { nameAr: true } } } }),
   ]);
 
   // resolve names for grade/governorate/school breakdowns

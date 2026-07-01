@@ -1,43 +1,46 @@
-// Lightweight in-memory cache with TTL — used to keep public read endpoints
-// fast under load (environment restricts extra caching middleware).
+/**
+ * Caching layer using Next 16 `unstable_cache` + `revalidateTag`.
+ *
+ * Each cached function declares the tags it depends on; mutating routes
+ * call `revalidateTag(tag)` after a write to invalidate the relevant caches
+ * across all server instances.
+ *
+ * Replaces the previous process-local Map (`src/lib/cache.ts`) which
+ * desynced under multi-pod deploys.
+ */
+import { unstable_cache } from "next/cache";
 
-type Entry<T> = { value: T; expires: number };
+export const TAGS = {
+  SETTINGS: "settings",
+  SCHOOLS: "schools",
+  GOVERNORATES: "governorates",
+  CITIES: "cities",
+  NEWS: "news",
+  FAQ: "faq",
+  DOCUMENTS: "documents",
+  ANNOUNCEMENTS: "announcements",
+  PAGES: "pages",
+  BANNERS: "banners",
+  MENUS: "menus",
+  HOME: "home", // aggregate for the homepage
+} as const;
 
-const store = new Map<string, Entry<unknown>>();
-
-export function cacheGet<T>(key: string): T | undefined {
-  const entry = store.get(key);
-  if (!entry) return undefined;
-  if (Date.now() > entry.expires) {
-    store.delete(key);
-    return undefined;
-  }
-  return entry.value as T;
+/**
+ * Wrap an async fetcher with a tag-based cache. Use this for read-only
+ * multi-row reads that change infrequently.
+ *
+ *   const getSchools = tagged(TAGS.SCHOOLS, 300, () => db.school.findMany(...));
+ *   const schools = await getSchools();
+ */
+export function tagged<TArgs extends unknown[], TResult>(
+  tag: string,
+  ttlSec: number,
+  fn: (...args: TArgs) => Promise<TResult>,
+): (...args: TArgs) => Promise<TResult> {
+  return unstable_cache(fn, [tag], { tags: [tag], revalidate: ttlSec }) as (
+    ...args: TArgs
+  ) => Promise<TResult>;
 }
 
-export function cacheSet<T>(key: string, value: T, ttlMs = 60_000): void {
-  store.set(key, { value, expires: Date.now() + ttlMs });
-}
-
-export function cacheDelete(prefix: string): void {
-  for (const key of store.keys()) {
-    if (key.startsWith(prefix)) store.delete(key);
-  }
-}
-
-export function cacheClear(): void {
-  store.clear();
-}
-
-// Convenience: get-or-set helper
-export async function cacheMemo<T>(
-  key: string,
-  ttlMs: number,
-  fn: () => Promise<T>
-): Promise<T> {
-  const cached = cacheGet<T>(key);
-  if (cached !== undefined) return cached;
-  const value = await fn();
-  cacheSet(key, value, ttlMs);
-  return value;
-}
+/** Re-export for call sites that want to invalidate. */
+export { revalidateTag } from "next/cache";

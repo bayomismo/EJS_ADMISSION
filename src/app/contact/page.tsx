@@ -10,6 +10,12 @@ import { Label } from "@/components/ui/label";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "اتصل بنا | المدارس المصرية اليابانية",
+  description: "طرق التواصل مع إدارة المدارس المصرية اليابانية",
+  openGraph: { title: "اتصل بنا", locale: "ar_EG", type: "website" },
+};
+
 export default async function ContactPage() {
   const settings = await getSiteSettings();
 

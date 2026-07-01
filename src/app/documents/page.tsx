@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toArabicNumber, toArabicDigits } from "@/lib/arabic";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // ISR — content changes via admin CRUD then revalidatePath
 
 function fileIcon(type?: string | null) {
   if (type === "docx") return FileText;

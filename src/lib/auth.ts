@@ -8,9 +8,55 @@ import {
 } from "@/lib/permissions";
 import { logAudit } from "@/lib/audit";
 
+// Fail-fast guard: refuse to boot in production without a strong secret.
+const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET;
+if (process.env.NODE_ENV === "production") {
+  if (!NEXTAUTH_SECRET || NEXTAUTH_SECRET.length < 32) {
+    throw new Error(
+      "NEXTAUTH_SECRET is missing or too short (min 32 chars). Generate one with: openssl rand -base64 48",
+    );
+  }
+  // Reject known-bad placeholder secrets.
+  if (NEXTAUTH_SECRET.includes("ejs-platform-secret-key")) {
+    throw new Error(
+      "NEXTAUTH_SECRET is a known placeholder. Replace with a real random secret.",
+    );
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
   pages: { signIn: "/admin/login" },
+  // Hardened session cookies: HttpOnly, SameSite=Strict, Secure in prod.
+  // Use first-party contexts only — admin app does not embed cross-origin.
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-ejs.session" : "ejs.session",
+      options: {
+        httpOnly: true,
+        sameSite: "strict",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-ejs.callback" : "ejs.callback",
+      options: {
+        sameSite: "strict",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-ejs.csrf" : "ejs.csrf",
+      options: {
+        httpOnly: true,
+        sameSite: "strict",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -73,6 +119,24 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).permissions = token.permissions ?? [];
       }
       return session;
+    },
+  },
+  events: {
+    async signOut({ token }) {
+      try {
+        const userId = (token as any)?.id as string | undefined;
+        if (userId) {
+          await logAudit({
+            userId,
+            action: "LOGOUT",
+            entity: "user",
+            entityId: userId,
+            summary: `تسجيل خروج`,
+          });
+        }
+      } catch {
+        // never break signout on audit failure
+      }
     },
   },
 };

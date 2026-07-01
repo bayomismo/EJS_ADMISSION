@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Building2, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { Building2, Loader2, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 
-export default function AdminLoginPage() {
+function AdminLoginInner() {
   const router = useRouter();
   const sp = useSearchParams();
   const callback = sp.get("callbackUrl") || "/admin";
-  const [email, setEmail] = useState("admin@ejs.gov.eg");
-  const [password, setPassword] = useState("Admin@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -82,18 +84,31 @@ export default function AdminLoginPage() {
           </Button>
         </form>
 
-        <div className="mt-5 rounded-xl bg-secondary/60 p-3 text-xs text-muted-foreground">
-          <p className="mb-1 flex items-center gap-1.5 font-medium text-foreground">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" /> حسابات تجريبية
-          </p>
-          <p>مدير عام: <span dir="ltr" className="nums">admin@ejs.gov.eg / Admin@123</span></p>
-          <p>محرر: <span dir="ltr" className="nums">editor@ejs.gov.eg / Editor@123</span></p>
-        </div>
-
         <p className="mt-4 text-center text-xs text-muted-foreground">
           <a href="/" className="hover:text-primary">← العودة للموقع</a>
         </p>
       </Card>
     </div>
+  );
+}
+
+function LoginFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-crimson/10 p-4">
+      <Card className="relative w-full max-w-md p-8 shadow-card">
+        <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>جارٍ التحميل...</span>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <AdminLoginInner />
+    </Suspense>
   );
 }

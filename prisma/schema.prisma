@@ -1,13 +1,13 @@
 // Egyptian Japanese Schools (EJS) — Admission Management Platform
-// Prisma schema. SQLite for development; portable to PostgreSQL for production
-// by switching the datasource provider (no model changes required).
+// Prisma schema. PostgreSQL for Vercel/serverless production; SQLite still
+// supported for local dev by setting DATABASE_URL=file:./db/dev.db.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -26,6 +26,10 @@ model User {
   updatedAt    DateTime @updatedAt
 
   auditLogs AuditLog[]
+  mustChangePassword Boolean  @default(false)
+  // Scope JSON: { "schoolIds": ["..."] | "governorateIds": ["..."] }
+  // null/undefined = full access (super-admin, admin).
+  scope       String?
 
   @@index([roleId])
 }
@@ -128,6 +132,8 @@ model School {
 
   @@index([governorateId, cityId])
   @@index([isActive, isFeatured])
+  @@index([isActive, isArchived])
+  @@index([isArchived])
   @@index([type])
 }
 
@@ -329,7 +335,7 @@ model Banner {
 model MenuItem {
   id        String     @id @default(cuid())
   parentId  String?
-  parent    MenuItem?  @relation("MenuTree", fields: [parentId], references: [id])
+  parent    MenuItem?  @relation("MenuTree", fields: [parentId], references: [id], onDelete: Cascade)
   children  MenuItem[] @relation("MenuTree")
   labelAr   String
   labelEn   String?
@@ -352,7 +358,7 @@ model Setting {
 model AuditLog {
   id        String   @id @default(cuid())
   userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   action    String   // CREATE | UPDATE | DELETE | LOGIN | LOGOUT | BULK
   entity    String
   entityId  String?
@@ -366,6 +372,7 @@ model AuditLog {
   @@index([userId])
   @@index([entity, entityId])
   @@index([createdAt])
+  @@index([action])
 }
 
 // ───────────────────────────── Admissions ─────────────────────────────
@@ -481,4 +488,5 @@ model VerificationCode {
 
   @@index([email, purpose])
   @@index([code])
+  @@index([expiresAt])
 }

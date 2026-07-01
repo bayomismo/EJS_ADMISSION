@@ -1,23 +1,75 @@
-:81 {
-	@transform_port_query {
-		query XTransformPort=*
-	}
+{
+    # Production Caddyfile for the EJS Admission Platform.
+    #
+    # Required env (set by the deploy env or systemd unit):
+    #   EJS_DOMAIN        — public hostname (e.g. apply.ejs.moe.gov.eg)
+    #   EJS_UPSTREAM      — Next.js listen address (default localhost:3000)
+    #
+    # Tunable env:
+    #   EJS_HSTS_MAX_AGE  — default 63072000 (2 years, includes subdomains)
+    #   EJS_RATE_PER_10S  — default 100 (per IP, 100 req / 10s)
+    #
+    # The previous dev-only XTransformPort backdoor was removed; if you need
+    # multiple upstreams, use the `handle` block with explicit host matchers.
 
-	handle @transform_port_query {
-		reverse_proxy localhost:{query.XTransformPort} {
-			header_up Host {host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-			header_up X-Real-IP {remote_host}
-		}
-	}
+    auto_https on
+    admin off
+    servers {
+        protocols h1 h2 h2c h3
+    }
+}
 
-	handle {
-		reverse_proxy localhost:3000 {
-			header_up Host {host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-			header_up X-Real-IP {remote_host}
-		}
-	}
+# Public site (TLS-terminated)
+{EJS_DOMAIN}:443 {
+    encode zstd gzip
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age={env.EJS_HSTS_MAX_AGE||63072000}; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+        Content-Security-Policy "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'"
+        Cross-Origin-Opener-Policy "same-origin"
+        # Don't leak the dev tools surface
+        Server ""
+        X-Powered-By ""
+        # Cache-Control on HTML pages: do not cache authenticated responses by accident
+        Cache-Control "public, max-age=0, must-revalidate"
+        -Server
+        -X-Powered-By
+    }
+
+    # Edge rate limit: 100 req per 10s per IP. Public POSTs are also
+    # rate-limited in-app; this is a coarse first line of defence.
+    rate_limit {env.EJS_RATE_PER_10S||100r/10s} {
+        distributed false
+    }
+
+    # Strip incoming X-Forwarded-* so the app sees a clean source
+    header_up -X-Forwarded-For
+    header_up -X-Forwarded-Proto
+    header_up -X-Forwarded-Host
+    header_up -X-Real-IP
+
+    # Pass through correct client identity (Caddy re-injects from peer)
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Forwarded-Proto {scheme}
+    header_up X-Forwarded-Host {host}
+    header_up X-Real-IP {remote_host}
+
+    reverse_proxy {env.EJS_UPSTREAM||localhost:3000} {
+        # Trust only the loopback for the upstream
+        dial_timeout 5s
+        response_timeout 30s
+    }
+}
+
+# Internal / health endpoint (no TLS, localhost only)
+localhost:2019 {
+    @health path /healthz /readyz
+    respond "ok" 200
+    @denied not path /healthz /readyz
+    abort @denied
 }

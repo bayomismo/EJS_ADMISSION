@@ -4,6 +4,12 @@ import { SchoolFinder } from "@/components/public/school-finder";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "المدارس | المدارس المصرية اليابانية",
+  description: "ابحث عن أقرب مدرسة مصرية يابانية حسب المحافظة والمدينة ونوع التعليم",
+  openGraph: { title: "مدارسنا", locale: "ar_EG", type: "website" },
+};
+
 export default async function SchoolsPage() {
   const governorates = await db.governorate.findMany({
     where: { isActive: true },

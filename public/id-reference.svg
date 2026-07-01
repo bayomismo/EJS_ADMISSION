@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Reference image for applicants: where to find the 14-digit national ID
+  on a شهادة ميلاد (Egyptian birth certificate). SVG used instead of
+  raster so it stays crisp at any size and never serves executable JS.
+  This file is a TEMPLATE — replace with the final MOE-published diagram.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" role="img" aria-label="مكان الرقم القومي في شهادة الميلاد">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff8e1"/>
+      <stop offset="100%" stop-color="#fde7b5"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="600" height="360" rx="12" fill="url(#bg)" stroke="#a87a3c" stroke-width="2"/>
+  <text x="300" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#5a3a14">شهادة ميلاد</text>
+  <text x="300" y="68" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#5a3a14">حدد موقع الرقم القومي المكوّن من ١٤ رقم</text>
+
+  <!-- Sample certificate layout -->
+  <g transform="translate(40,100)">
+    <rect width="520" height="200" rx="6" fill="#fff" stroke="#a87a3c" stroke-width="1.5"/>
+    <text x="20" y="32" font-family="Arial, sans-serif" font-size="13" fill="#444">الاسم:</text>
+    <text x="80" y="32" font-family="Arial, sans-serif" font-size="13" fill="#222">محمد علي أحمد</text>
+    <text x="20" y="62" font-family="Arial, sans-serif" font-size="13" fill="#444">تاريخ الميلاد:</text>
+    <text x="120" y="62" font-family="Arial, sans-serif" font-size="13" fill="#222">٢٠١٨/٠١/١٥</text>
+    <text x="20" y="92" font-family="Arial, sans-serif" font-size="13" fill="#444">النوع:</text>
+    <text x="80" y="92" font-family="Arial, sans-serif" font-size="13" fill="#222">ذكر</text>
+
+    <!-- The 14-digit national ID box, highlighted -->
+    <rect x="20" y="120" width="240" height="48" rx="4" fill="#fff5d6" stroke="#c0392b" stroke-width="3" stroke-dasharray="6 4"/>
+    <text x="30" y="142" font-family="Arial, sans-serif" font-size="11" fill="#5a3a14">الرقم القومي:</text>
+    <text x="120" y="148" font-family="monospace" font-size="20" font-weight="bold" fill="#c0392b" letter-spacing="2">٣١٨٠١١٥٠١٢٣٤٥٦</text>
+
+    <!-- Arrow pointing to the box -->
+    <line x1="380" y1="200" x2="280" y2="160" stroke="#c0392b" stroke-width="3" marker-end="url(#arr)"/>
+    <text x="380" y="225" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#c0392b">الرقم المطلوب</text>
+  </g>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c0392b"/>
+    </marker>
+  </defs>
+</svg>

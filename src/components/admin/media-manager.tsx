@@ -47,7 +47,13 @@ export function MediaManager() {
 
   async function del(id: string) { if (!confirm("حذف هذا الملف؟")) return; const res = await fetch(`/api/admin/media/${id}`, { method: "DELETE" }); if (!res.ok) return toast.error("فشل الحذف"); toast.success("تم الحذف"); load(); }
 
-  function copyUrl(url: string) { navigator.clipboard.writeText(window.location.origin + url); toast.success("تم نسخ الرابط"); }
+  function copyUrl(url: string) {
+    // The media URL points to an authenticated API route. The bearer cookie
+    // is sent automatically on same-origin requests, so this works inside the
+    // admin app. Do NOT share externally — anyone with the URL must be logged in.
+    navigator.clipboard.writeText(window.location.origin + url);
+    toast.success("تم نسخ الرابط (داخلي فقط)");
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8">

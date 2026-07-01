@@ -1,42 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { z } from "zod";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { randomBytes } from "crypto";
+import { teacherApplicationSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
 
-const schema = z.object({
-  // personal
-  fullNameAr: z.string().min(3),
-  fullNameEn: z.string().optional().nullable(),
-  birthDate: z.string().min(6),
-  gender: z.enum(["MALE", "FEMALE", "MIXED"]),
-  nationalId: z.string().length(14),
-  nationality: z.string().default("مصري"),
-  phone: z.string().min(10),
-  email: z.string().email().optional().nullable(),
-  addressAr: z.string().min(3),
-  // qualifications
-  qualification: z.string().min(2),
-  university: z.string().min(2),
-  graduationYear: z.number().int().min(1970).max(new Date().getFullYear()),
-  specialization: z.string().optional().nullable(),
-  subjects: z.string().optional().nullable(),
-  yearsOfExperience: z.number().int().min(0).default(0),
-  currentEmployer: z.string().optional().nullable(),
-  currentPosition: z.string().optional().nullable(),
-  hasTeachingCert: z.boolean().default(false),
-  // preference
-  preferredGovernorateId: z.string().optional().nullable(),
-  // misc
-  cvUrl: z.string().optional().nullable(),
-  notes: z.string().optional().nullable(),
-  // terms (CRITICAL)
-  termsAccepted: z.literal(true),
-  termsVersion: z.string().min(1),
-});
+const schema = teacherApplicationSchema;
 
-// POST /api/public/applications/teachers
+function genReferenceNo(year: number, yearCount: number, suffix: string): string {
+  return `EJS-T-${year}-${String(yearCount + 1).padStart(6, "0")}-${suffix}`;
+}
+
 export async function POST(req: NextRequest) {
+  // 1. Rate limit by IP — 5/hour, 30/day. Teachers are far less frequent.
+  const ip = clientIp(req.headers, "unknown");
+  const ipHourly = rateLimit({ key: `teachers:ip:${ip}:h`, max: 5, windowMs: 60 * 60 * 1000 });
+  if (!ipHourly.allowed) {
+    return NextResponse.json(
+      { error: "تجاوزت الحد المسموح من المحاولات. يرجى المحاولة لاحقاً." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(ipHourly.resetMs / 1000)) } }
+    );
+  }
+  const ipDaily = rateLimit({ key: `teachers:ip:${ip}:d`, max: 30, windowMs: 24 * 60 * 60 * 1000 });
+  if (!ipDaily.allowed) {
+    return NextResponse.json(
+      { error: "تجاوزت الحد اليومي من المحاولات." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(ipDaily.resetMs / 1000)) } }
+    );
+  }
+
+  // 2. Parse + validate.
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
@@ -45,8 +39,6 @@ export async function POST(req: NextRequest) {
       { status: 422 }
     );
   }
-
-  // CRITICAL: enforce terms acceptance server-side
   if (!parsed.data.termsAccepted) {
     return NextResponse.json(
       { error: "يجب الموافقة على الشروط والأحكام قبل التقديم" },
@@ -54,40 +46,103 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const count = await db.teacherApplication.count();
-  const year = new Date().getFullYear();
-  const referenceNo = `EJS-T-${year}-${String(count + 1).padStart(6, "0")}`;
+  // 3. Optional per-email daily cap if email provided.
+  if (parsed.data.email) {
+    const emailDaily = rateLimit({
+      key: `teachers:email:${parsed.data.email.toLowerCase()}:d`,
+      max: 3,
+      windowMs: 24 * 60 * 60 * 1000,
+    });
+    if (!emailDaily.allowed) {
+      return NextResponse.json(
+        { error: "تم استلام 3 طلبات من هذا البريد خلال 24 ساعة." },
+        { status: 429 }
+      );
+    }
+  }
 
-  const app = await db.teacherApplication.create({
-    data: {
-      referenceNo,
-      fullNameAr: parsed.data.fullNameAr,
-      fullNameEn: parsed.data.fullNameEn || null,
-      birthDate: parsed.data.birthDate,
-      gender: parsed.data.gender,
-      nationalId: parsed.data.nationalId,
-      nationality: parsed.data.nationality,
-      phone: parsed.data.phone,
-      email: parsed.data.email || null,
-      addressAr: parsed.data.addressAr,
-      qualification: parsed.data.qualification,
-      university: parsed.data.university,
-      graduationYear: parsed.data.graduationYear,
-      specialization: parsed.data.specialization || null,
-      subjects: parsed.data.subjects || null,
-      yearsOfExperience: parsed.data.yearsOfExperience,
-      currentEmployer: parsed.data.currentEmployer || null,
-      currentPosition: parsed.data.currentPosition || null,
-      hasTeachingCert: parsed.data.hasTeachingCert,
-      preferredGovernorateId: parsed.data.preferredGovernorateId || null,
-      cvUrl: parsed.data.cvUrl || null,
-      notes: parsed.data.notes || null,
-      termsAccepted: true,
-      termsAcceptedAt: new Date(),
-      termsVersion: parsed.data.termsVersion,
-      status: "PENDING",
-    },
+  // 4. Validate preferred governorate if supplied.
+  if (parsed.data.preferredGovernorateId) {
+    const gov = await db.governorate.findUnique({
+      where: { id: parsed.data.preferredGovernorateId },
+    });
+    if (!gov || !gov.isActive) {
+      return NextResponse.json(
+        { error: "المحافظة المفضلة غير متاحة" },
+        { status: 404 }
+      );
+    }
+  }
+
+  // 5. Atomic create + audit. ReferenceNo is `<prefix>-<year>-<count>-<suffix>`
+  //    to break the count()+1 race; uniqueness is enforced by the schema.
+  const year = new Date().getFullYear();
+  const yearStart = new Date(`${year}-01-01T00:00:00Z`);
+  const yearCount = await db.teacherApplication.count({
+    where: { submittedAt: { gte: yearStart } },
   });
 
-  return NextResponse.json({ success: true, referenceNo: app.referenceNo, id: app.id }, { status: 201 });
+  let app;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const suffix = randomBytes(2).toString("hex").toUpperCase();
+    const referenceNo = genReferenceNo(year, yearCount, suffix);
+    try {
+      app = await db.$transaction(async (tx) => {
+        const created = await tx.teacherApplication.create({
+          data: {
+            referenceNo,
+            fullNameAr: parsed.data.fullNameAr,
+            fullNameEn: parsed.data.fullNameEn || null,
+            birthDate: parsed.data.birthDate,
+            gender: parsed.data.gender,
+            nationalId: parsed.data.nationalId,
+            nationality: parsed.data.nationality,
+            phone: parsed.data.phone,
+            email: parsed.data.email || null,
+            addressAr: parsed.data.addressAr,
+            qualification: parsed.data.qualification,
+            university: parsed.data.university,
+            graduationYear: parsed.data.graduationYear,
+            specialization: parsed.data.specialization || null,
+            subjects: parsed.data.subjects || null,
+            yearsOfExperience: parsed.data.yearsOfExperience,
+            currentEmployer: parsed.data.currentEmployer || null,
+            currentPosition: parsed.data.currentPosition || null,
+            hasTeachingCert: parsed.data.hasTeachingCert,
+            preferredGovernorateId: parsed.data.preferredGovernorateId || null,
+            cvUrl: parsed.data.cvUrl || null,
+            notes: parsed.data.notes || null,
+            termsAccepted: true,
+            termsAcceptedAt: new Date(),
+            termsVersion: parsed.data.termsVersion,
+            status: "PENDING",
+          },
+        });
+        await tx.auditLog.create({
+          data: {
+            userId: null,
+            action: "CREATE",
+            entity: "teacherApplication",
+            entityId: created.id,
+            newValue: JSON.stringify({ referenceNo: created.referenceNo, submittedAt: created.submittedAt }),
+            summary: `تقديم معلم جديد: ${created.referenceNo}`,
+            ip,
+            userAgent: req.headers.get("user-agent") || undefined,
+          },
+        });
+        return created;
+      });
+      break;
+    } catch (e: any) {
+      const isUnique =
+        e?.code === "P2002" || /UNIQUE constraint failed/i.test(String(e?.message));
+      if (!isUnique || attempt === 2) throw e;
+    }
+  }
+
+  if (!app) {
+    return NextResponse.json({ error: "فشل توليد رقم مرجعي، يرجى إعادة المحاولة." }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true, referenceNo: app.referenceNo }, { status: 201 });
 }

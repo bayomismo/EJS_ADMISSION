@@ -10,6 +10,12 @@ import { toArabicDigits } from "@/lib/arabic";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "الأخبار | المدارس المصرية اليابانية",
+  description: "آخر الأخبار والإعلانات الرسمية من المدارس المصرية اليابانية ووزارة التربية والتعليم",
+  openGraph: { title: "الأخبار", locale: "ar_EG", type: "website" },
+};
+
 export default async function NewsPage() {
   const [items, categories] = await Promise.all([
     db.news.findMany({
