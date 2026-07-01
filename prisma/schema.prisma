@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Egyptian Japanese Schools (EJS) — Admission Management Platform
+// Prisma schema. SQLite for development; portable to PostgreSQL for production
+// by switching the datasource provider (no model changes required).
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +11,354 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ───────────────────────────── Auth & RBAC ─────────────────────────────
+
 model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  roleId       String
+  role         Role     @relation(fields: [roleId], references: [id])
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@index([roleId])
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  isSystem    Boolean          @default(false) // system roles cannot be deleted
+  createdAt   DateTime         @default(now())
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique // e.g. "schools.create"
+  module      String           // e.g. "schools"
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+// ───────────────────────────── Geography ─────────────────────────────
+
+model Governorate {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  nameAr    String   @unique
+  nameEn    String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cities    City[]
+  schools   School[]
+}
+
+model City {
+  id            String      @id @default(cuid())
+  governorateId String
+  governorate   Governorate @relation(fields: [governorateId], references: [id])
+  nameAr        String
+  nameEn        String
+  sortOrder     Int         @default(0)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  schools       School[]
+
+  @@unique([governorateId, nameAr])
+  @@index([governorateId])
+}
+
+// ───────────────────────────── Schools ─────────────────────────────
+
+model School {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  nameAr         String
+  nameEn         String?
+  governorateId  String
+  governorate    Governorate @relation(fields: [governorateId], references: [id])
+  cityId         String
+  city           City     @relation(fields: [cityId], references: [id])
+  type           String   @default("ARABIC") // ARABIC | LANGUAGES
+  gender         String   @default("MIXED")  // MALE | FEMALE | MIXED
+  addressAr      String?
+  addressEn      String?
+  lat            Float?
+  lng            Float?
+  phone          String?
+  email          String?
+  descriptionAr  String?
+  descriptionEn  String?
+  capacity       Int?
+  applicationUrl String?
+  coverImageId   String?
+  sortOrder      Int      @default(0)
+  isFeatured     Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  isArchived     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  images     SchoolImage[]
+  facilities SchoolFacility[]
+  grades     SchoolGrade[]
+
+  @@index([governorateId, cityId])
+  @@index([isActive, isFeatured])
+  @@index([type])
+}
+
+model SchoolImage {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  mediaId   String
+  captionAr String?
+  sortOrder Int      @default(0)
+
+  @@index([schoolId])
+}
+
+model Facility {
+  id        String           @id @default(cuid())
+  nameAr    String           @unique
+  nameEn    String?
+  icon      String?
+  schools   SchoolFacility[]
+}
+
+model SchoolFacility {
+  schoolId   String
+  facilityId String
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+
+  @@id([schoolId, facilityId])
+}
+
+model Grade {
+  id        String        @id @default(cuid())
+  nameAr    String        @unique
+  nameEn    String?
+  sortOrder Int           @default(0)
+  schools   SchoolGrade[]
+}
+
+model SchoolGrade {
+  schoolId String
+  gradeId  String
+  school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  grade    Grade  @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+
+  @@id([schoolId, gradeId])
+}
+
+// ───────────────────────────── Content ─────────────────────────────
+
+model NewsCategory {
+  id        String   @id @default(cuid())
+  nameAr    String   @unique
+  nameEn    String?
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  news      News[]
+}
+
+model News {
+  id           String       @id @default(cuid())
+  titleAr      String
+  titleEn      String?
+  slug         String       @unique
+  excerptAr    String?
+  excerptEn    String?
+  bodyAr       String
+  bodyEn       String?
+  categoryId   String?
+  category     NewsCategory? @relation(fields: [categoryId], references: [id])
+  coverImageId String?
+  status       String       @default("DRAFT") // DRAFT | SCHEDULED | PUBLISHED | ARCHIVED
+  isFeatured   Boolean      @default(false)
+  publishedAt  DateTime?
+  scheduledAt  DateTime?
+  viewCount    Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+}
+
+model FaqCategory {
+  id        String   @id @default(cuid())
+  nameAr    String   @unique
+  nameEn    String?
+  sortOrder Int      @default(0)
+  items     Faq[]
+}
+
+model Faq {
+  id         String       @id @default(cuid())
+  categoryId String?
+  category   FaqCategory? @relation(fields: [categoryId], references: [id])
+  questionAr String
+  questionEn String?
+  answerAr   String
+  answerEn   String?
+  sortOrder  Int          @default(0)
+  isActive   Boolean      @default(true)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([categoryId])
+}
+
+model Announcement {
+  id         String    @id @default(cuid())
+  titleAr    String
+  titleEn    String?
+  bodyAr     String
+  bodyEn     String?
+  type       String    @default("INFO") // INFO | WARNING | SUCCESS | URGENT
+  linkUrl    String?
+  startDate  DateTime  @default(now())
+  endDate    DateTime?
+  isActive   Boolean   @default(true)
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model DocumentCategory {
+  id        String       @id @default(cuid())
+  nameAr    String       @unique
+  nameEn    String?
+  slug      String       @unique
+  sortOrder Int          @default(0)
+  documents Document[]
+}
+
+model Document {
+  id           String           @id @default(cuid())
+  titleAr      String
+  titleEn      String?
+  descriptionAr String?
+  descriptionEn String?
+  categoryId   String?
+  category     DocumentCategory? @relation(fields: [categoryId], references: [id])
+  mediaId      String?
+  fileType     String?           // pdf | docx | xlsx | image
+  fileSize     Int?
+  downloadCount Int              @default(0)
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([categoryId])
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  titleAr   String
+  titleEn   String?
+  bodyAr    String
+  bodyEn    String?
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
+// ───────────────────────────── Media & Presentation ─────────────────────────────
+
+model Media {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  altAr        String?
+  altEn        String?
+  type         String   @default("IMAGE") // IMAGE | VIDEO | DOC
+  createdAt    DateTime @default(now())
+
+  @@index([type])
+}
+
+model Banner {
+  id          String    @id @default(cuid())
+  titleAr     String
+  titleEn     String?
+  subtitleAr  String?
+  subtitleEn  String?
+  imageId     String?
+  linkUrl     String?
+  buttonTextAr String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model MenuItem {
+  id        String     @id @default(cuid())
+  parentId  String?
+  parent    MenuItem?  @relation("MenuTree", fields: [parentId], references: [id])
+  children  MenuItem[] @relation("MenuTree")
+  labelAr   String
+  labelEn   String?
+  url       String
+  target    String     @default("_self")
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+}
+
+// ───────────────────────────── Settings & Audit ─────────────────────────────
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String // JSON-encoded
+  group String @default("general")
   updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // CREATE | UPDATE | DELETE | LOGIN | LOGOUT | BULK
+  entity    String
+  entityId  String?
+  oldValue  String?  // JSON
+  newValue  String?  // JSON
+  summary   String?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
 }

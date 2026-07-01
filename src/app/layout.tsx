@@ -1,52 +1,68 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cairo } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { SessionProviderWrapper } from "@/providers/session-provider";
+import { QueryProvider } from "@/providers/query-provider";
+import { getSiteSettings } from "@/lib/settings";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  variable: "--font-cairo",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSiteSettings();
+  return {
+    title: settings.seo.metaTitleAr || settings.branding.siteNameAr,
+    description: settings.seo.metaDescriptionAr,
+    keywords: settings.seo.keywordsAr?.split(",").map((k) => k.trim()),
+    icons: {
+      icon: settings.branding.faviconUrl || "/logo.svg",
+    },
+    openGraph: {
+      title: settings.seo.metaTitleAr,
+      description: settings.seo.metaDescriptionAr,
+      type: "website",
+      locale: "ar_EG",
+    },
+    authors: [{ name: "وزارة التربية والتعليم والتعليم الفني - مصر" }],
+  };
+}
 
-export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
-  openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-  },
-};
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
+  const settings = await getSiteSettings();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${cairo.variable} font-sans antialiased bg-background text-foreground`}
       >
-        {children}
-        <Toaster />
+        <SessionProviderWrapper>
+          <QueryProvider>
+            {children}
+            <Toaster />
+            <SonnerToaster position="top-center" richColors closeButton />
+          </QueryProvider>
+        </SessionProviderWrapper>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "EducationalOrganization",
+              name: settings.branding.siteNameAr,
+              alternateName: settings.branding.siteNameEn,
+              url: settings.social.website,
+              email: settings.contact.email,
+              telephone: settings.contact.phone,
+            }),
+          }}
+        />
       </body>
     </html>
   );
