@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   LayoutDashboard, Building2, Map, MapPin, Newspaper, HelpCircle, FileText,
-  Megaphone, Image, Settings, Users, ScrollText, LogOut, Menu, X, Building,
+  Megaphone, Image, Settings, Users, ScrollText, LogOut, Menu, X, Building, BarChart3,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,7 @@ const NAV_GROUPS: { title: string; items: { href: string; label: string; icon: a
   {
     title: "النظام",
     items: [
+      { href: "/admin/reports", label: "التقارير", icon: BarChart3, perm: "reports" },
       { href: "/admin/users", label: "المستخدمون", icon: Users, perm: "users" },
       { href: "/admin/audit", label: "سجل التغييرات", icon: ScrollText, perm: "audit" },
       { href: "/admin/settings", label: "الإعدادات", icon: Settings, perm: "settings" },
@@ -64,9 +65,8 @@ export function AdminSidebar({
       {/* mobile top bar */}
       <div className="sticky top-0 z-40 flex items-center justify-between border-b border-sidebar-border bg-sidebar px-4 py-3 lg:hidden">
         <Link href="/admin" className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Building className="h-5 w-5" />
-          </span>
+          { }
+          <img src="/ejs-logo.png" alt="EJS" className="h-9 w-9 rounded-lg object-contain ring-1 ring-primary/10 bg-white p-0.5" />
           <span className="font-extrabold">لوحة الإدارة</span>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => setOpen((v) => !v)}>
@@ -83,9 +83,8 @@ export function AdminSidebar({
       >
         <div className="flex h-full flex-col">
           <div className="hidden items-center gap-2.5 border-b border-sidebar-border p-5 lg:flex">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
-              <Building className="h-5 w-5" />
-            </span>
+            { }
+            <img src="/ejs-logo.png" alt="EJS" className="h-10 w-10 rounded-xl object-contain ring-1 ring-primary/10 bg-white p-0.5" />
             <div className="leading-tight">
               <div className="font-extrabold text-sidebar-foreground">لوحة الإدارة</div>
               <div className="text-[11px] text-muted-foreground">المدارس المصرية اليابانية</div>

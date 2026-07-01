@@ -10,9 +10,8 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
           {/* brand */}
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <Building2 className="h-5 w-5" />
-              </span>
+              { }
+              <img src={settings.branding.logoUrl || "/ejs-logo.png"} alt={settings.branding.siteNameAr} className="h-11 w-11 rounded-xl object-contain ring-1 ring-primary/10 bg-white p-0.5" />
               <div className="leading-tight">
                 <div className="font-extrabold">{settings.branding.siteNameAr}</div>
                 <div className="text-[11px] text-muted-foreground" dir="ltr">

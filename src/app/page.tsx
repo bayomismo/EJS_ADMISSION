@@ -161,8 +161,118 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ───────── QUICK ACCESS ───────── */}
-      <section className="mx-auto max-w-7xl px-4 py-14">
+      {/* ───────── THREE-SECTION ENTRY (A: Public · B: Student · C: Teacher) ───────── */}
+      <section className="border-b border-border bg-gradient-to-b from-background to-secondary/30">
+        <div className="mx-auto max-w-7xl px-4 py-14">
+          <div className="mb-8 text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-bold text-primary">
+              بوابة شاملة لكل خدمات القبول
+            </span>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl text-balance">
+              ثلاث بوابات متكاملة لخدمتك
+            </h2>
+            <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
+              اختر البوابة المناسبة لك — المعلومات العامة للجميع، تقديم الطلاب لأولياء الأمور، وتقديم المعلمين للكوادر التعليمية
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Section A — Public */}
+            <Link href="/news" className="group">
+              <Card className="relative h-full overflow-hidden p-6 transition-all hover:shadow-card hover:-translate-y-1">
+                <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-teal/10 blur-2xl" />
+                <div className="relative">
+                  <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-bl from-teal-500 to-cyan-600 text-white shadow-soft">
+                    <Megaphone className="h-7 w-7" />
+                  </span>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="rounded-md bg-teal/10 px-2 py-0.5 text-[11px] font-bold text-teal">القسم A</span>
+                  </div>
+                  <h3 className="mb-1.5 text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                    البوابة العامة
+                  </h3>
+                  <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
+                    الإعلانات والأخبار والأسئلة الشائعة ومركز المستندات — كل ما تحتاج معرفته عن المدارس المصرية اليابانية
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    <Badge variant="secondary" className="text-[10px]">إعلانات</Badge>
+                    <Badge variant="secondary" className="text-[10px]">أخبار</Badge>
+                    <Badge variant="secondary" className="text-[10px]">أسئلة شائعة</Badge>
+                    <Badge variant="secondary" className="text-[10px]">مستندات</Badge>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-teal">
+                    استعرض المحتوى <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                  </span>
+                </div>
+              </Card>
+            </Link>
+
+            {/* Section B — Student Admission */}
+            <Link href="/admission/students" className="group">
+              <Card className="relative h-full overflow-hidden p-6 transition-all hover:shadow-card hover:-translate-y-1 ring-2 ring-crimson/20">
+                <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-crimson/15 blur-2xl" />
+                <div className="relative">
+                  <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-bl from-crimson to-rose-600 text-white shadow-soft">
+                    <GraduationCap className="h-7 w-7" />
+                  </span>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="rounded-md bg-crimson/10 px-2 py-0.5 text-[11px] font-bold text-crimson">القسم B</span>
+                    {live.status === "OPEN" && (
+                      <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-700">التقديم مفتوح</span>
+                    )}
+                  </div>
+                  <h3 className="mb-1.5 text-xl font-bold text-foreground group-hover:text-crimson transition-colors">
+                    تقديم الطلاب
+                  </h3>
+                  <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
+                    قدّم طلب التحاق طفلك بالمدارس المصرية اليابانية إلكترونياً — من رياض أطفال حتى الصف الثالث الابتدائي
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    <Badge variant="secondary" className="text-[10px]">KG1 - الصف الثالث</Badge>
+                    <Badge variant="secondary" className="text-[10px]">تقديم إلكتروني</Badge>
+                    <Badge variant="secondary" className="text-[10px]">شروط وقواعد</Badge>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-crimson">
+                    ابدأ التقديم <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                  </span>
+                </div>
+              </Card>
+            </Link>
+
+            {/* Section C — Teacher Admission */}
+            <Link href="/admission/teachers" className="group">
+              <Card className="relative h-full overflow-hidden p-6 transition-all hover:shadow-card hover:-translate-y-1">
+                <div className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-gold/15 blur-2xl" />
+                <div className="relative">
+                  <span className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-bl from-amber-500 to-orange-600 text-white shadow-soft">
+                    <Users className="h-7 w-7" />
+                  </span>
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="rounded-md bg-gold/15 px-2 py-0.5 text-[11px] font-bold text-amber-700">القسم C</span>
+                  </div>
+                  <h3 className="mb-1.5 text-xl font-bold text-foreground group-hover:text-amber-700 transition-colors">
+                    تقديم المعلمين
+                  </h3>
+                  <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
+                    تقدم للعمل بالمدارس المصرية اليابانية — انضم إلى فريق تعليمي يطبق منهجية «توكاتسو» اليابانية
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    <Badge variant="secondary" className="text-[10px]">معلمون</Badge>
+                    <Badge variant="secondary" className="text-[10px]">توكاتسو</Badge>
+                    <Badge variant="secondary" className="text-[10px]">وظائف تعليمية</Badge>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-sm font-bold text-amber-700">
+                    تقدم الآن <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                  </span>
+                </div>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── QUICK ACCESS TILES ───────── */}
+      <section className="mx-auto max-w-7xl px-4 py-12">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {QUICK_ACCESS.map((q) => (
             <Link key={q.href} href={q.href}>

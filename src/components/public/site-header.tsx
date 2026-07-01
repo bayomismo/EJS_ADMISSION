@@ -12,6 +12,8 @@ import type { SiteSettings } from "@/lib/constants";
 const NAV = [
   { href: "/", label: "الرئيسية" },
   { href: "/schools", label: "ابحث عن مدرسة" },
+  { href: "/admission/students", label: "تقديم الطلاب" },
+  { href: "/admission/teachers", label: "تقديم المعلمين" },
   { href: "/news", label: "الأخبار" },
   { href: "/faq", label: "الأسئلة الشائعة" },
   { href: "/documents", label: "مركز المستندات" },
@@ -66,11 +68,22 @@ export function SiteHeader({
       </div>
 
       {/* main bar */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-3 shrink-0">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
-            <Building2 className="h-6 w-6" />
-          </span>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2.5">
+        <Link href="/" className="flex items-center gap-3 shrink-0 group">
+          {settings.branding.logoUrl ? (
+            <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-soft ring-1 ring-primary/10 overflow-hidden transition-transform group-hover:scale-105">
+              { }
+              <img
+                src={settings.branding.logoUrl}
+                alt={settings.branding.siteNameAr}
+                className="h-full w-full object-contain p-0.5"
+              />
+            </span>
+          ) : (
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
+              <Building2 className="h-6 w-6" />
+            </span>
+          )}
           <span className="flex flex-col leading-tight">
             <span className="text-base font-extrabold text-foreground">
               {settings.branding.siteNameAr}

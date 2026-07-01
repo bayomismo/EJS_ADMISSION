@@ -69,6 +69,8 @@ model Governorate {
   updatedAt DateTime @updatedAt
   cities    City[]
   schools   School[]
+  studentApplications  StudentApplication[]
+  teacherApplications  TeacherApplication[]
 }
 
 model City {
@@ -82,6 +84,7 @@ model City {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   schools       School[]
+  studentApplications StudentApplication[]
 
   @@unique([governorateId, nameAr])
   @@index([governorateId])
@@ -121,6 +124,7 @@ model School {
   images     SchoolImage[]
   facilities SchoolFacility[]
   grades     SchoolGrade[]
+  studentApplications StudentApplication[]
 
   @@index([governorateId, cityId])
   @@index([isActive, isFeatured])
@@ -161,6 +165,7 @@ model Grade {
   nameEn    String?
   sortOrder Int           @default(0)
   schools   SchoolGrade[]
+  studentApplications StudentApplication[]
 }
 
 model SchoolGrade {
@@ -361,4 +366,101 @@ model AuditLog {
   @@index([userId])
   @@index([entity, entityId])
   @@index([createdAt])
+}
+
+// ───────────────────────────── Admissions ─────────────────────────────
+
+model StudentApplication {
+  id             String   @id @default(cuid())
+  referenceNo    String   @unique // human-readable, e.g. EJS-S-2026-000123
+  // Student
+  studentNameAr  String
+  studentNameEn  String?
+  birthDate      String   // ISO date
+  gender         String   @default("MIXED") // MALE | FEMALE
+  nationalId     String   // Egyptian national ID
+  nationality    String   @default("مصري")
+  // Guardian
+  guardianName   String
+  guardianRelation String // father | mother | other
+  guardianPhone  String
+  guardianEmail  String?
+  guardianNationalId String
+  guardianOccupation String?
+  // Placement
+  governorateId  String
+  governorate    Governorate @relation(fields: [governorateId], references: [id])
+  cityId         String
+  city           City     @relation(fields: [cityId], references: [id])
+  schoolId       String
+  school         School   @relation(fields: [schoolId], references: [id])
+  gradeId        String?
+  grade          Grade?   @relation(fields: [gradeId], references: [id])
+  previousSchool String?
+  addressAr      String
+  // Assessment answers (JSON: [{question, answer}])
+  skillsAnswers  String?  // JSON
+  notes          String?
+  // Terms acknowledgment (CRITICAL)
+  termsAccepted  Boolean  @default(false)
+  termsAcceptedAt DateTime?
+  termsVersion   String?
+  // Status
+  status         String   @default("PENDING") // PENDING | REVIEW | ACCEPTED | REJECTED | WAITLIST
+  statusNote     String?
+  submittedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([gradeId])
+  @@index([governorateId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+model TeacherApplication {
+  id             String   @id @default(cuid())
+  referenceNo    String   @unique // e.g. EJS-T-2026-000045
+  // Personal
+  fullNameAr     String
+  fullNameEn     String?
+  birthDate      String
+  gender         String   @default("MIXED")
+  nationalId     String
+  nationality    String   @default("مصري")
+  phone          String
+  email          String?
+  addressAr      String
+  // Qualifications
+  qualification  String   // Bachelor | Master | PhD | Other
+  university     String
+  graduationYear Int
+  specialization String?
+  subjects       String?  // comma-separated subjects they can teach
+  yearsOfExperience Int   @default(0)
+  currentEmployer String?
+  currentPosition String?
+  hasTeachingCert Boolean @default(false)
+  // Placement preference
+  preferredGovernorateId String?
+  preferredGovernorate Governorate? @relation(fields: [preferredGovernorateId], references: [id])
+  preferredSchoolId      String?
+  // Misc
+  cvUrl          String?
+  notes          String?
+  // Terms acknowledgment (CRITICAL)
+  termsAccepted  Boolean  @default(false)
+  termsAcceptedAt DateTime?
+  termsVersion   String?
+  // Status
+  status         String   @default("PENDING") // PENDING | REVIEW | ACCEPTED | REJECTED
+  statusNote     String?
+  submittedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([preferredGovernorateId])
+  @@index([status])
+  @@index([submittedAt])
 }

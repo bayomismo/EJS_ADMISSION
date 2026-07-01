@@ -21,3 +21,35 @@ Stage Summary:
 - Admin login: admin@ejs.gov.eg / Admin@123 (super-admin, full perms); editor@ejs.gov.eg / Editor@123 (content editor).
 - Everything is dynamic through the DB/admin — zero hardcoded content. Scales to 500+ schools. No code edits needed post-deployment for content management.
 - Dev server running on port 3000; preview via the Preview Panel (do not visit localhost directly).
+---
+Task ID: 2
+Agent: Lead Full Stack Engineer (Z.ai Code, main session)
+Task: EJS logo integration + homepage restructure into 3 sections (Public/Student Admission/Teacher Admission) + admission submission flows with mandatory terms-acknowledgment gate + admin Reports section with edit/delete of submitted records.
+
+Work Log:
+- Generated EJS logo emblem via image-generation (book + pyramids + rising sun, teal/crimson/gold, complements theme). VLM confirmed clean/professional. Saved to public/ejs-logo.png and set as branding.logoUrl + favicon.
+- Extended Prisma schema: StudentApplication + TeacherApplication models (applicant data, placement, termsAccepted/termsAcceptedAt/termsVersion, status workflow, referenceNo). Added back-relations on Governorate/City/School/Grade. db:push applied.
+- Seeded: 10 sample student applications + 5 teacher applications (realistic Egyptian names, varied statuses/grades/schools), plus student-terms and teacher-terms Page content (full Arabic terms & conditions).
+- Logo integration: updated SiteHeader (logo in white rounded container with hover scale), SiteFooter, AdminSidebar (desktop + mobile), Admin login page. Complementary visual theme maintained (teal/crimson/gold).
+- Homepage restructured: new "ثلاث بوابات متكاملة" section with 3 prominent color-coded cards — Section A (البوابة العامة, teal) → /news, Section B (تقديم الطلاب, crimson, with "التقديم مفتوح" badge when admission open) → /admission/students, Section C (تقديم المعلمين, amber/gold) → /admission/teachers. Added admission links to header NAV.
+- Student Admission flow (/admission/students): landing page (steps, requirements, CTA disabled when admission closed) + /apply (5-step wizard: TermsGate → Student → Guardian → Placement → Review) + /success (reference number with copy). Multi-step form with validation per step.
+- Teacher Admission flow (/admission/teachers): separate landing (steps, requirements, "why join" panel) + /apply (4-step wizard: TermsGate → Personal → Qualifications → Review) + /success. Distinct amber theme.
+- TermsGate component (CRITICAL requirement): reusable gate enforcing (1) scroll-to-bottom of terms text (read proof — checkbox stays disabled until scrolled), (2) checkbox confirmation (button stays disabled until checked), (3) server-side enforcement via zod literal(true) on termsAccepted + admission-status gate (rejects submissions when CLOSED). Defense-in-depth.
+- Public submit APIs: POST /api/public/applications/students + /teachers (zod validation, terms enforcement, school/governorate/city consistency check, reference number generation). GET /api/public/terms?slug=.
+- Admin Reports section (/admin/reports): metrics dashboard with KPI cards (total students/teachers, accepted, in-review), 14-day submission trend bar chart, status distribution bars, breakdowns by grade/governorate/school (students) and subject/status (teachers), recent submissions. Reports nav added to sidebar + permissions matrix (re-seeded).
+- Admin application management: /admin/reports/students + /teachers tables (search, status filter, pagination) with View drawer (full details), Edit drawer (status/statusNote/fields), Delete. All mutations audit-logged. APIs: GET/PUT/DELETE /api/admin/applications/{students,teachers}/[id].
+- Verification (Agent Browser end-to-end):
+  - Homepage: logo in header, 3 sections (A/B/C) render, "التقديم مفتوح" badge on Section B. VLM: 8/10.
+  - Student apply: terms gate enforced — checkbox disabled until scroll-to-bottom, button disabled until checkbox checked, then advances to step 2.
+  - Server-side enforcement: POST without termsAccepted=false → zod rejects ("expected true"). Valid POST → 201 + referenceNo EJS-S-2026-000011.
+  - Teacher submit: valid POST → 201 + EJS-T-2026-000006.
+  - Admin Reports dashboard: all metrics render (status dist, by grade/gov/school, trend, recent).
+  - Edit flow: opened edit drawer, changed status PENDING→ACCEPTED, saved → DB updated, audit log captured ("تعديل طلب طالب: EJS-S-2026-000011").
+  - Lint: 0 errors, 0 warnings. All 8 new routes return 200 (public) / 307 (admin auth gate). No runtime errors.
+
+Stage Summary:
+- EJS logo prominently featured in header (public + admin + login + footer) with complementary visual theme.
+- Homepage clearly organized into 3 distinct sections (Public / Student Admission / Teacher Admission).
+- Student & Teacher admission flows are separate modules with mandatory terms-acknowledgment gate (scroll-to-read + checkbox + server-side enforcement + admission-status lockout when closed).
+- Admin Reports section: metrics dashboard (students by school/grade/governorate/status + teachers by subject/status) + full CRUD on submitted student & teacher records (view/edit/delete, audit-logged).
+- 4 new DB models, 7 new API routes, 8 new pages, 4 new components. All Arabic RTL, lint-clean, browser-verified.
