@@ -9,9 +9,11 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           {/* brand */}
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               { }
               <img src={settings.branding.logoUrl || "/ejs-logo.png"} alt={settings.branding.siteNameAr} className="h-11 w-11 rounded-xl object-contain ring-1 ring-primary/10 bg-white p-0.5" />
+              { }
+              <img src="/moe-logo.png" alt="وزارة التربية والتعليم" className="h-10 w-10 rounded-lg object-contain ring-1 ring-primary/10 bg-white p-0.5" />
               <div className="leading-tight">
                 <div className="font-extrabold">{settings.branding.siteNameAr}</div>
                 <div className="text-[11px] text-muted-foreground" dir="ltr">

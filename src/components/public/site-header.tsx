@@ -63,21 +63,31 @@ export function SiteHeader({
 
       {/* main bar */}
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2.5">
-        <Link href="/" className="flex items-center gap-3 shrink-0 group">
-          {settings.branding.logoUrl ? (
-            <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-soft ring-1 ring-primary/10 overflow-hidden transition-transform group-hover:scale-105">
-              { }
-              <img
-                src={settings.branding.logoUrl}
-                alt={settings.branding.siteNameAr}
-                className="h-full w-full object-contain p-0.5"
-              />
-            </span>
-          ) : (
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
-              <Building2 className="h-6 w-6" />
-            </span>
-          )}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          {/* Dual logos: EJS + MOE side by side */}
+          <div className="flex items-center gap-2">
+            {settings.branding.logoUrl ? (
+              <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-soft ring-1 ring-primary/10 overflow-hidden transition-transform group-hover:scale-105">
+                { }
+                <img
+                  src={settings.branding.logoUrl}
+                  alt={settings.branding.siteNameAr}
+                  className="h-full w-full object-contain p-0.5"
+                />
+              </span>
+            ) : (
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft">
+                <Building2 className="h-6 w-6" />
+              </span>
+            )}
+            {/* MOE logo */}
+            { }
+            <img
+              src="/moe-logo.png"
+              alt="وزارة التربية والتعليم"
+              className="h-12 w-12 rounded-xl bg-white object-contain ring-1 ring-primary/10 p-0.5 shadow-soft transition-transform group-hover:scale-105"
+            />
+          </div>
           <span className="flex flex-col leading-tight">
             <span className="text-base font-extrabold text-foreground">
               {settings.branding.siteNameAr}

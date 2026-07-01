@@ -89,12 +89,14 @@ export function AdminSidebar({
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="hidden items-center gap-2.5 border-b border-sidebar-border p-5 lg:flex">
+          <div className="hidden items-center gap-2 border-b border-sidebar-border p-4 lg:flex">
             { }
-            <img src="/ejs-logo.png" alt="EJS" className="h-10 w-10 rounded-xl object-contain ring-1 ring-primary/10 bg-white p-0.5" />
+            <img src="/ejs-logo.png" alt="EJS" className="h-9 w-9 rounded-lg object-contain ring-1 ring-primary/10 bg-white p-0.5" />
+            { }
+            <img src="/moe-logo.png" alt="MOE" className="h-8 w-8 rounded-lg object-contain ring-1 ring-primary/10 bg-white p-0.5" />
             <div className="leading-tight">
-              <div className="font-extrabold text-sidebar-foreground">لوحة الإدارة</div>
-              <div className="text-[11px] text-muted-foreground">المدارس المصرية اليابانية</div>
+              <div className="font-extrabold text-sidebar-foreground text-sm">لوحة الإدارة</div>
+              <div className="text-[10px] text-muted-foreground">المدارس المصرية اليابانية</div>
             </div>
           </div>
 
