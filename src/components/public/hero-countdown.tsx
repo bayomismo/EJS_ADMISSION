@@ -1,8 +1,34 @@
 "use client";
 
-import { useCountdown } from "@/hooks/use-countdown";
+import { useState, useEffect } from "react";
 import { toArabicDigits } from "@/lib/arabic";
 import { CalendarCheck, Timer } from "lucide-react";
+
+interface Countdown {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  done: boolean;
+}
+
+/**
+ * Compute the countdown once, imperatively. Kept outside React state on the
+ * server so the server and client render identical markup (a stable skeleton)
+ * and the live ticking only begins after hydration on the client.
+ */
+function computeCountdown(targetIso: string | null, now: number): Countdown | null {
+  if (!targetIso) return null;
+  const diff = new Date(targetIso).getTime() - now;
+  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, done: true };
+  return {
+    days: Math.floor(diff / 86400000),
+    hours: Math.floor((diff % 86400000) / 3600000),
+    minutes: Math.floor((diff % 3600000) / 60000),
+    seconds: Math.floor((diff % 60000) / 1000),
+    done: false,
+  };
+}
 
 export function HeroCountdown({
   openDate,
@@ -16,12 +42,28 @@ export function HeroCountdown({
   // If upcoming -> countdown to open; if open -> countdown to close
   const target =
     status === "UPCOMING" ? openDate : status === "OPEN" ? closeDate : closeDate;
-  const cd = useCountdown(target);
 
   const label =
     status === "UPCOMING" ? "يفتح التقديم خلال" : status === "OPEN" ? "يغلق التقديم خلال" : "انتهى التقديم";
 
-  if (status === "CLOSED" || !cd || cd.done) {
+  // `mounted` ensures the live (time-dependent) markup is only rendered on the
+  // client after hydration. Before mount we render a stable skeleton so the
+  // server and client HTML match exactly — preventing hydration mismatches
+  // caused by Date.now() differing between server render and client hydration.
+  const [mounted, setMounted] = useState(false);
+  const [cd, setCd] = useState<Countdown | null>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- standard mounted guard to avoid SSR/client hydration mismatch
+    setMounted(true);
+    const update = () => setCd(computeCountdown(target, Date.now()));
+    update();
+    const t = setInterval(update, 1000);
+    return () => clearInterval(t);
+  }, [target]);
+
+  // CLOSED / done state — stable across server & client (no time dependency)
+  if (status === "CLOSED" || (mounted && cd?.done)) {
     return (
       <div className="flex items-center gap-2 rounded-xl bg-muted p-4 text-sm font-medium text-muted-foreground">
         <CalendarCheck className="h-5 w-5" />
@@ -30,12 +72,19 @@ export function HeroCountdown({
     );
   }
 
-  const units = [
-    { v: cd.days, l: "يوم" },
-    { v: cd.hours, l: "ساعة" },
-    { v: cd.minutes, l: "دقيقة" },
-    { v: cd.seconds, l: "ثانية" },
-  ];
+  const units = cd
+    ? [
+        { v: cd.days, l: "يوم" },
+        { v: cd.hours, l: "ساعة" },
+        { v: cd.minutes, l: "دقيقة" },
+        { v: cd.seconds, l: "ثانية" },
+      ]
+    : [
+        { v: "--", l: "يوم" },
+        { v: "--", l: "ساعة" },
+        { v: "--", l: "دقيقة" },
+        { v: "--", l: "ثانية" },
+      ];
 
   return (
     <div>
@@ -47,7 +96,9 @@ export function HeroCountdown({
         {units.map((u) => (
           <div key={u.l} className="rounded-xl border border-border bg-background p-2 text-center">
             <div className="text-2xl font-extrabold tabular-nums text-primary nums">
-              {toArabicDigits(String(u.v).padStart(2, "0"))}
+              {typeof u.v === "number"
+                ? toArabicDigits(String(u.v).padStart(2, "0"))
+                : toArabicDigits(u.v)}
             </div>
             <div className="text-[10px] text-muted-foreground">{u.l}</div>
           </div>

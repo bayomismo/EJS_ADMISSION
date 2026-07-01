@@ -82,3 +82,16 @@ Stage Summary:
 - Student Admission Step 1 (most critical feature): parent email (mandatory) + retype-email confirmation + Student ID → automatic age calculation as of Oct 1 of admission year + prominent alert + automatic grade population — all live in the first step.
 - Two specialized roles (Student Admission Manager, Teacher Admission Manager) created, seeded with sample users, and enforced at both API and page level. Admin assigns these roles via the Users manager. Each manager can only access their respective admission section.
 - Admin login accounts: admin@ejs.gov.eg/Admin@123 (super), student.mgr@ejs.gov.eg/Student@123 (student mgr), teacher.mgr@ejs.gov.eg/Teacher@123 (teacher mgr).
+---
+Task ID: 4
+Agent: Lead Full Stack Engineer (Z.ai Code, main session)
+Task: Fix hydration mismatch error on the homepage HeroCountdown component (server rendered ٥٠, client rendered ٥١).
+
+Work Log:
+- Root cause: HeroCountdown used useCountdown hook with useState(() => Date.now()). The server rendered the countdown using the server's clock; by client hydration (ms later) the seconds had ticked over, producing different text (٥٠ vs ٥١) → React hydration mismatch.
+- Rewrote src/components/public/hero-countdown.tsx: added a `mounted` guard so the server and initial client render produce identical stable skeleton markup (placeholder "--" digits). The live Date.now() countdown only begins after mount via useEffect + setInterval. CLOSED/done state is time-independent and stable. Added eslint-disable for the legitimate mounted-guard setState-in-effect.
+- Removed dependency on the old use-countdown hook (logic now self-contained in the component).
+- Verification: restarted dev server, bun run lint clean (0 errors), homepage returns 200. Agent Browser fresh load: console clean (only React DevTools info + HMR log), NO hydration errors, NO page errors. Countdown still renders live numbers after mount (٢٦ يوم ٢٣ ساعة...). Dev log shows no hydration/mismatch warnings.
+
+Stage Summary:
+- Hydration mismatch resolved. The HeroCountdown now renders a stable skeleton on the server and ticks live only after client mount, eliminating the server/client time discrepancy.
