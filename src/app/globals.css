@@ -46,57 +46,64 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ───────── Egyptian Japanese Schools — Premium Government Portal ───────── */
+/* ───────── Egyptian Japanese Schools — Logo-Derived Palette ───────── */
+/* Colors extracted directly from the EJS logo:
+   Primary Teal   #0A7D6F  (logo background — main brand color)
+   Secondary Teal #0A5D5A  (darker teal — depth)
+   Gold           #D4AF37  (logo border — accent/premium)
+   Crimson Red    #E63946  (rising sun — CTAs/alerts)
+*/
 :root {
   --radius: 0.75rem;
 
   /* Warm soft background */
-  --background: oklch(0.99 0.004 95);
-  --foreground: oklch(0.21 0.02 168);
+  --background: oklch(0.99 0.004 168);
+  --foreground: oklch(0.22 0.03 172);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.02 168);
+  --card-foreground: oklch(0.22 0.03 172);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.02 168);
+  --popover-foreground: oklch(0.22 0.03 172);
 
-  /* Deep teal-emerald primary (governmental, educational) */
-  --primary: oklch(0.45 0.09 168);
+  /* Primary = logo teal #0A7D6F */
+  --primary: oklch(0.52 0.09 168);
   --primary-foreground: oklch(0.99 0.01 95);
 
-  --secondary: oklch(0.96 0.012 168);
-  --secondary-foreground: oklch(0.3 0.04 168);
+  /* Secondary = darker logo teal #0A5D5A */
+  --secondary: oklch(0.96 0.014 168);
+  --secondary-foreground: oklch(0.42 0.07 178);
 
-  --muted: oklch(0.965 0.006 95);
-  --muted-foreground: oklch(0.5 0.02 168);
+  --muted: oklch(0.965 0.008 168);
+  --muted-foreground: oklch(0.5 0.025 168);
 
-  --accent: oklch(0.95 0.025 168);
-  --accent-foreground: oklch(0.3 0.06 168);
+  --accent: oklch(0.95 0.03 168);
+  --accent-foreground: oklch(0.42 0.07 178);
 
-  /* Crimson accent (Egypt + Japan) for CTAs / "Apply" */
-  --crimson: oklch(0.55 0.19 25);
-  --teal: oklch(0.5 0.09 178);
-  --gold: oklch(0.78 0.14 80);
+  /* Logo accent colors */
+  --crimson: oklch(0.58 0.20 25);   /* #E63946 rising sun */
+  --teal: oklch(0.42 0.07 178);     /* #0A5D5A secondary teal */
+  --gold: oklch(0.78 0.14 85);      /* #D4AF37 border gold */
 
-  --destructive: oklch(0.58 0.22 25);
-  --border: oklch(0.9 0.008 168);
-  --input: oklch(0.92 0.008 168);
-  --ring: oklch(0.45 0.09 168);
+  --destructive: oklch(0.58 0.20 25);
+  --border: oklch(0.9 0.01 168);
+  --input: oklch(0.92 0.01 168);
+  --ring: oklch(0.52 0.09 168);
 
-  --chart-1: oklch(0.45 0.09 168);
-  --chart-2: oklch(0.55 0.19 25);
-  --chart-3: oklch(0.78 0.14 80);
-  --chart-4: oklch(0.6 0.1 200);
+  --chart-1: oklch(0.52 0.09 168);
+  --chart-2: oklch(0.58 0.20 25);
+  --chart-3: oklch(0.78 0.14 85);
+  --chart-4: oklch(0.42 0.07 178);
   --chart-5: oklch(0.5 0.12 145);
 
-  --sidebar: oklch(0.985 0.004 168);
-  --sidebar-foreground: oklch(0.25 0.03 168);
-  --sidebar-primary: oklch(0.45 0.09 168);
+  --sidebar: oklch(0.985 0.005 168);
+  --sidebar-foreground: oklch(0.25 0.035 172);
+  --sidebar-primary: oklch(0.52 0.09 168);
   --sidebar-primary-foreground: oklch(0.99 0.01 95);
-  --sidebar-accent: oklch(0.94 0.02 168);
-  --sidebar-accent-foreground: oklch(0.3 0.06 168);
-  --sidebar-border: oklch(0.9 0.008 168);
-  --sidebar-ring: oklch(0.45 0.09 168);
+  --sidebar-accent: oklch(0.94 0.025 168);
+  --sidebar-accent-foreground: oklch(0.42 0.07 178);
+  --sidebar-border: oklch(0.9 0.01 168);
+  --sidebar-ring: oklch(0.52 0.09 168);
 }
 
 .dark {

@@ -14,12 +14,6 @@ const NAV = [
   { href: "/schools", label: "ابحث عن مدرسة" },
   { href: "/admission/students", label: "تقديم الطلاب" },
   { href: "/admission/teachers", label: "تقديم المعلمين" },
-  { href: "/news", label: "الأخبار" },
-  { href: "/faq", label: "الأسئلة الشائعة" },
-  { href: "/documents", label: "مركز المستندات" },
-  { href: "/announcements", label: "الإعلانات" },
-  { href: "/about", label: "عن المدارس" },
-  { href: "/contact", label: "تواصل معنا" },
 ];
 
 export function SiteHeader({

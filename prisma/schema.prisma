@@ -464,3 +464,21 @@ model TeacherApplication {
   @@index([status])
   @@index([submittedAt])
 }
+
+// ───────────────────────────── Email Verification ─────────────────────────────
+// Stores 6-digit OTP codes for parent/guardian email verification during
+// the student admission flow. Codes expire after 10 minutes.
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   // 6-digit code
+  purpose   String   @default("student-admission")
+  consumed  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  attempts  Int      @default(0)
+
+  @@index([email, purpose])
+  @@index([code])
+}
