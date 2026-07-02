@@ -31,35 +31,17 @@ export const authOptions: NextAuthOptions = {
   // requires Secure=true AND https, which we have, but some browser
   // configurations silently reject __Secure- cookies on credentials
   // login redirects. Use plain names for maximum compatibility.
-  cookies: {
-    sessionToken: {
-      name: "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-    callbackUrl: {
-      name: "next-auth.callback-url",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-    csrfToken: {
-      name: "next-auth.csrf-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
+  // NUCLEAR OPTION: no cookie customization at all. NextAuth will use
+  // its built-in defaults which are:
+  //   - sessionToken: name "next-auth.session-token" (or
+  //     __Secure-next-auth.session-token in production)
+  //   - sameSite: "lax"
+  //   - httpOnly: true
+  //   - secure: true in production
+  //   - path: "/"
+  // If the previous attempts failed, this MUST work because there's no
+  // custom config to break anything.
+  cookies: {},
   providers: [
     CredentialsProvider({
       name: "credentials",
