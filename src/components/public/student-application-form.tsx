@@ -208,7 +208,39 @@ export function StudentApplicationForm({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل إرسال الطلب");
+      if (!res.ok) {
+        // Build a detailed error message from the Zod field errors
+        const details = data.details?.fieldErrors;
+        let detailMsg = data.error || "فشل إرسال الطلب";
+        if (details) {
+          const fieldNames = {
+            studentNameAr: "اسم الطالب",
+            studentNameEn: "اسم الطالب بالإنجليزية",
+            birthDate: "تاريخ الميلاد",
+            gender: "النوع",
+            nationalId: "الرقم القومي",
+            nationality: "الجنسية",
+            guardianName: "اسم ولي الأمر",
+            guardianRelation: "صلة القرابة",
+            guardianPhone: "هاتف ولي الأمر",
+            guardianEmail: "بريد ولي الأمر",
+            guardianNationalId: "الرقم القومي لولي الأمر",
+            governorateId: "المحافظة",
+            cityId: "المدينة",
+            schoolId: "المدرسة",
+            gradeId: "المرحلة",
+            addressAr: "العنوان",
+            termsAccepted: "الموافقة على الشروط",
+            termsVersion: "إصدار الشروط",
+          };
+          const msgs = Object.entries(details)
+            .filter(([_, v]) => Array.isArray(v) && v.length > 0)
+            .map(([k, v]) => `${fieldNames[k] || k}: ${(v as string[]).join(", ")}`)
+            .join("\n");
+          if (msgs) detailMsg = `${data.error || "بيانات غير صالحة"}\n${msgs}`;
+        }
+        throw new Error(detailMsg);
+      }
       toast.success("تم إرسال طلبك بنجاح");
       router.push(`/admission/students/success?ref=${encodeURIComponent(data.referenceNo)}`);
     } catch (e: any) {
