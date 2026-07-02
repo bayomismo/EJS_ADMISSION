@@ -180,29 +180,22 @@ export function StudentApplicationForm({
     return null;
   }
 
+  function scrollToTop() {
+    requestAnimationFrame(() => {
+      const el = document.getElementById("apply-form-top");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
   function next() {
     const err = validateStep(step);
     if (err) { toast.error(err); return; }
     const ni = stepIndex + 1;
-    if (ni < STEPS.length) {
-      setStep(STEPS[ni].key);
-      requestAnimationFrame(() => {
-        const el = document.getElementById("apply-form-top");
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        else window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    }
+    if (ni < STEPS.length) { setStep(STEPS[ni].key); scrollToTop(); }
   }
   function prev() {
     const pi = stepIndex - 1;
-    if (pi >= 0) {
-      setStep(STEPS[pi].key);
-      requestAnimationFrame(() => {
-        const el = document.getElementById("apply-form-top");
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        else window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    }
+    if (pi >= 0) { setStep(STEPS[pi].key); scrollToTop(); }
   }
 
   async function submit() {
@@ -309,7 +302,7 @@ export function StudentApplicationForm({
           termsSlug="student-terms"
           accent="crimson"
           ctaLabel="أوافق وأبدأ التقديم"
-          onAccepted={() => setStep("student")}
+          onAccepted={() => { setStep("student"); scrollToTop(); }}
         />
       )}
 
