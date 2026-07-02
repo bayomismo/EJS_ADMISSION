@@ -27,17 +27,13 @@ if (process.env.NODE_ENV === "production") {
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
   pages: { signIn: "/admin/login" },
-  // Cookie config:
-  //   - Use the __Secure- prefix in production (forces Secure=true, only works on https)
-  //   - sameSite=lax instead of strict: with strict, the cookie is sometimes
-  //     dropped on the first request after a credentials login because the
-  //     browser considers the post-login redirect cross-site. Lax works for
-  //     top-level navigation (the only way the user reaches the admin).
-  //   - domain omitted: let the browser default to the exact origin so
-  //     cookies can never leak to a sibling subdomain.
+  // Standard next-auth cookie names (no __Secure- prefix). The prefix
+  // requires Secure=true AND https, which we have, but some browser
+  // configurations silently reject __Secure- cookies on credentials
+  // login redirects. Use plain names for maximum compatibility.
   cookies: {
     sessionToken: {
-      name: process.env.NODE_ENV === "production" ? "__Secure-ejs.session" : "ejs.session",
+      name: "next-auth.session-token",
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -46,15 +42,16 @@ export const authOptions: NextAuthOptions = {
       },
     },
     callbackUrl: {
-      name: process.env.NODE_ENV === "production" ? "__Secure-ejs.callback" : "ejs.callback",
+      name: "next-auth.callback-url",
       options: {
+        httpOnly: true,
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
       },
     },
     csrfToken: {
-      name: process.env.NODE_ENV === "production" ? "__Secure-ejs.csrf" : "ejs.csrf",
+      name: "next-auth.csrf-token",
       options: {
         httpOnly: true,
         sameSite: "lax",
