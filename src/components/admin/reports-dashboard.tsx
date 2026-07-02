@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Users, GraduationCap, TrendingUp, School, MapPin, Award,
-  ArrowLeft, ClipboardList, UserCheck, Clock,
+  ArrowLeft, ClipboardList, UserCheck, Clock, FileSpreadsheet, Download,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,9 +71,14 @@ export function ReportsDashboard() {
           <h1 className="text-2xl font-extrabold">التقارير والإحصائيات</h1>
           <p className="text-sm text-muted-foreground">إحصائيات طلبات القبول للطلاب والمعلمين</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm"><Link href="/admin/reports/students"><GraduationCap className="ml-1.5 h-4 w-4" /> طلبات الطلاب</Link></Button>
           <Button asChild variant="outline" size="sm"><Link href="/admin/reports/teachers"><Users className="ml-1.5 h-4 w-4" /> طلبات المعلمين</Link></Button>
+          <Button asChild variant="default" size="sm">
+            <a href="/api/admin/reports/metrics/export" download>
+              <FileSpreadsheet className="ml-1.5 h-4 w-4" /> تصدير ملخص Excel
+            </a>
+          </Button>
         </div>
       </div>
 

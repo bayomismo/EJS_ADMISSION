@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Search, Pencil, Trash2, Loader2, X, Eye, GraduationCap, Users,
-  Filter, ChevronRight, ChevronLeft,
+  Filter, ChevronRight, ChevronLeft, Download, FileSpreadsheet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,22 +46,52 @@ export function ApplicationsManager({ type }: { type: "students" | "teachers" })
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [schoolFilter, setSchoolFilter] = useState("all");
+  const [govFilter, setGovFilter] = useState("all");
   const [editing, setEditing] = useState<App | null>(null);
   const [viewing, setViewing] = useState<App | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<any>({});
+
+  // Filter dropdown options
+  const [schools, setSchools] = useState<{ id: string; nameAr: string }[]>([]);
+  const [governorates, setGovernorates] = useState<{ id: string; nameAr: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/admin/schools?pageSize=200")
+      .then((r) => r.json())
+      .then((d) => setSchools((d.items || []).map((s: any) => ({ id: s.id, nameAr: s.nameAr }))))
+      .catch(() => {});
+    fetch("/api/admin/governorates")
+      .then((r) => r.json())
+      .then((d) => setGovernorates((d.items || d || []).map((g: any) => ({ id: g.id, nameAr: g.nameAr }))))
+      .catch(() => {});
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (statusFilter !== "all") params.set("status", statusFilter);
+    if (isStudent && schoolFilter !== "all") params.set("schoolId", schoolFilter);
+    if (govFilter !== "all") params.set("governorateId", govFilter);
     params.set("page", String(page));
     const res = await fetch(`/api/admin/applications/${type}?${params}`);
     const data = await res.json();
     setItems(data.items || []); setTotal(data.total || 0); setTotalPages(data.totalPages || 1);
     setLoading(false);
-  }, [type, q, statusFilter, page]);
+  }, [type, q, statusFilter, schoolFilter, govFilter, page]);
+
+  function exportXlsx() {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (isStudent && schoolFilter !== "all") params.set("schoolId", schoolFilter);
+    if (govFilter !== "all") params.set("governorateId", govFilter);
+    const url = `/api/admin/applications/${type}/export${params.toString() ? `?${params}` : ""}`;
+    window.location.href = url;
+    toast.success("جاري تنزيل الملف...");
+  }
 
   useEffect(() => { load(); }, [load]);
   function setQReset(v: string) { setQ(v); setPage(1); }
@@ -117,18 +147,37 @@ export function ApplicationsManager({ type }: { type: "students" | "teachers" })
         </div>
       </div>
 
-      <Card className="mb-4 p-3 flex flex-wrap gap-2">
+      <Card className="mb-4 p-3 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[220px]">
           <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQReset(e.target.value)} placeholder="بحث بالاسم، الرقم المرجعي، الهاتف..." className="pr-9" />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusReset}>
-          <SelectTrigger className="w-[170px]"><SelectValue /></SelectTrigger>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">كل الحالات</SelectItem>
             {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        {isStudent && (
+          <Select value={schoolFilter} onValueChange={(v) => { setSchoolFilter(v); setPage(1); }}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="كل المدارس" /></SelectTrigger>
+            <SelectContent className="max-h-72">
+              <SelectItem value="all">كل المدارس</SelectItem>
+              {schools.map((s) => <SelectItem key={s.id} value={s.id}>{s.nameAr}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        <Select value={govFilter} onValueChange={(v) => { setGovFilter(v); setPage(1); }}>
+          <SelectTrigger className="w-[180px]"><SelectValue placeholder="كل المحافظات" /></SelectTrigger>
+          <SelectContent className="max-h-72">
+            <SelectItem value="all">كل المحافظات</SelectItem>
+            {governorates.map((g) => <SelectItem key={g.id} value={g.id}>{g.nameAr}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" onClick={exportXlsx} className="gap-1.5">
+          <FileSpreadsheet className="h-4 w-4" /> تصدير Excel
+        </Button>
       </Card>
 
       <Card className="overflow-hidden p-0">
