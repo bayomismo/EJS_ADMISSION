@@ -138,7 +138,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   },
   general: {
     numeralStyle: "arabic",
-    applicationPortalUrl: "https://ejsadmpa.moe.gov.eg",
+    applicationPortalUrl: "https://ejs-admission.vercel.app/admission/students",
     announcementBarEnabled: true,
     announcementBarText:
       "فتح باب التقديم للمدارس المصرية اليابانية للعام الدراسي ٢٠٢٦/٢٠٢٧",

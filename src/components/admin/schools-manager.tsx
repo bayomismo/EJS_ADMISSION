@@ -624,7 +624,7 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
               <Field label="السعة"><Input value={form.capacity} onChange={(e) => set("capacity", e.target.value)} type="number" dir="ltr" /></Field>
             </div>
             <Field label="رابط التقديم الخارجي">
-              <Input value={form.applicationUrl} onChange={(e) => set("applicationUrl", e.target.value)} dir="ltr" placeholder="https://ejsadmpa.moe.gov.eg" />
+              <Input value={form.applicationUrl} onChange={(e) => set("applicationUrl", e.target.value)} dir="ltr" placeholder="https://ejs-admission.vercel.app/admission/students" />
             </Field>
           </div>
 

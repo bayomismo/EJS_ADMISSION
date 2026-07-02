@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     addressAr: r.address || null,
     capacity: r.capacity ?? null,
     descriptionAr: `تتبنى ${r.nameAr} نظام التعليم الياباني «توكاتسو» الذي يركز على تنمية شخصية الطفل بشكل متكامل.`,
-    applicationUrl: "https://ejsadmpa.moe.gov.eg",
+    applicationUrl: "https://ejs-admission.vercel.app/admission/students",
     isActive: true,
     isArchived: false,
     isFeatured: false,
