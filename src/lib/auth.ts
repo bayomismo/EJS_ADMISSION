@@ -65,13 +65,30 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        const log = (msg: string) => console.log(`[auth] ${new Date().toISOString()} ${msg}`);
+        if (!credentials?.email || !credentials?.password) {
+          log("missing credentials");
+          return null;
+        }
+        const email = credentials.email.toLowerCase();
         const user = await db.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
+          where: { email },
           include: { role: { include: { permissions: { include: { permission: true } } } } },
         });
-        if (!user || !user.isActive) return null;
-        if (!verifyPassword(credentials.password, user.passwordHash)) return null;
+        if (!user) {
+          log(`no user for email=${email}`);
+          return null;
+        }
+        if (!user.isActive) {
+          log(`user inactive: ${email}`);
+          return null;
+        }
+        const passOk = verifyPassword(credentials.password, user.passwordHash);
+        if (!passOk) {
+          log(`bad password for ${email}`);
+          return null;
+        }
+        log(`login OK: ${email}`);
 
         await db.user.update({
           where: { id: user.id },
