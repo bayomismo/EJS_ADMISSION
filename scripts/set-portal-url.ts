@@ -6,7 +6,8 @@
 //   $env:DATABASE_URL = "postgresql://...neon.../neondb?sslmode=require"   # DIRECT URL
 //   npx tsx scripts/set-portal-url.ts "https://ejs-admission.vercel.app/admission/students"
 //
-// Or just run with no argument to set it to the default Vercel URL.
+// Settings are stored as Setting(key, value:JSON, group). The general
+// settings live under SETTING_KEYS.general = "general".
 
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
@@ -20,20 +21,26 @@ async function main() {
 
   const db = new PrismaClient();
   try {
-    const settings = await db.siteSettings.findFirst();
-    if (!settings) {
-      console.error("No SiteSettings row found. Run `npm run db:seed` first.");
+    const row = await db.setting.findUnique({ where: { key: "general" } });
+    if (!row) {
+      console.error("No Setting(key='general') row found. Run `npm run db:seed` first.");
       process.exit(1);
     }
 
-    const general = (settings.general ?? {}) as Record<string, unknown>;
-    general.applicationPortalUrl = url;
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(row.value);
+    } catch {
+      console.error("Setting(key='general').value is not valid JSON, aborting.");
+      process.exit(1);
+    }
 
-    await db.siteSettings.update({
-      where: { id: settings.id },
-      data: { general: general as any },
+    parsed.applicationPortalUrl = url;
+    await db.setting.update({
+      where: { key: "general" },
+      data: { value: JSON.stringify(parsed) },
     });
-    console.log("✓ SiteSettings.general.applicationPortalUrl =", url);
+    console.log("✓ Setting(general).applicationPortalUrl =", url);
 
     // Clear all school-level applicationUrl so every school falls back to the global setting
     const r = await db.school.updateMany({
