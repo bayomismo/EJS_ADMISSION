@@ -27,14 +27,20 @@ if (process.env.NODE_ENV === "production") {
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: 60 * 60 * 8 },
   pages: { signIn: "/admin/login" },
-  // Hardened session cookies: HttpOnly, SameSite=Strict, Secure in prod.
-  // Use first-party contexts only — admin app does not embed cross-origin.
+  // Cookie config:
+  //   - Use the __Secure- prefix in production (forces Secure=true, only works on https)
+  //   - sameSite=lax instead of strict: with strict, the cookie is sometimes
+  //     dropped on the first request after a credentials login because the
+  //     browser considers the post-login redirect cross-site. Lax works for
+  //     top-level navigation (the only way the user reaches the admin).
+  //   - domain omitted: let the browser default to the exact origin so
+  //     cookies can never leak to a sibling subdomain.
   cookies: {
     sessionToken: {
       name: process.env.NODE_ENV === "production" ? "__Secure-ejs.session" : "ejs.session",
       options: {
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
       },
@@ -42,7 +48,7 @@ export const authOptions: NextAuthOptions = {
     callbackUrl: {
       name: process.env.NODE_ENV === "production" ? "__Secure-ejs.callback" : "ejs.callback",
       options: {
-        sameSite: "strict",
+        sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
       },
@@ -51,7 +57,7 @@ export const authOptions: NextAuthOptions = {
       name: process.env.NODE_ENV === "production" ? "__Secure-ejs.csrf" : "ejs.csrf",
       options: {
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
       },
