@@ -6,6 +6,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
 import { randomBytes } from "crypto";
 import { studentApplicationSchema } from "@/lib/schemas";
+import { parseEgyptianId } from "@/lib/egyptian-id";
 
 export const dynamic = "force-dynamic";
 
@@ -58,6 +59,16 @@ export async function POST(req: NextRequest) {
       { status: 422 }
     );
   }
+  // 3a. Server-side birth date extraction from national ID. Never trust the
+  // client’s birthDate — the client may submit an empty or stale value.
+  const idParsed = parseEgyptianId(parsed.data.nationalId);
+  if (!idParsed.valid || !idParsed.birthDate) {
+    return NextResponse.json(
+      { error: "الرقم القومي غير صالح أو لا يمكن استخراج تاريخ الميلاد منه" },
+      { status: 422 }
+    );
+  }
+  parsed.data.birthDate = idParsed.birthDate.toISOString().slice(0, 10);
   if (!parsed.data.termsAccepted) {
     return NextResponse.json(
       { error: "يجب الموافقة على الشروط والأحكام قبل التقديم" },
