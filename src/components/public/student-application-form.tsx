@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { computeStudentPlacement } from "@/lib/egyptian-id";
 import { toArabicNumber, toArabicDigits } from "@/lib/arabic";
-import { arabicOnly, englishOnly, digitsOnly } from "@/lib/validators";
+import { arabicOnly, englishOnly, digitsOnly, formatAgeArabic } from "@/lib/validators";
 
 interface Gov { id: string; nameAr: string; }
 interface City { id: string; nameAr: string; governorateId: string; }
