@@ -27,7 +27,14 @@ function AdminLoginInner() {
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (res?.error) {
-      setError("بيانات الدخول غير صحيحة. تأكد من البريد وكلمة المرور.");
+      // Surface the actual error code from NextAuth in dev for debugging
+      // (e.g. CredentialsSignin = bad password, Configuration = NEXTAUTH_URL issue)
+      const debugHint = res.error === "Configuration"
+        ? " (NEXTAUTH_URL غير متطابق — تحقق من إعدادات Vercel)"
+        : res.error === "AccessDenied"
+        ? " (الحساب غير مفعّل)"
+        : "";
+      setError("بيانات الدخول غير صحيحة. تأكد من البريد وكلمة المرور." + debugHint);
     } else {
       router.push(callback);
       router.refresh();
