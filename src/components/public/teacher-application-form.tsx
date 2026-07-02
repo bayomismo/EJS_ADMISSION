@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TermsGate } from "@/components/public/terms-gate";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { arabicOnly, englishOnly, digitsOnly } from "@/lib/validators";
 
 interface Gov { id: string; nameAr: string; }
 
@@ -67,11 +68,25 @@ export function TeacherApplicationForm({ governorates }: { governorates: Gov[] }
     const err = validateStep(step);
     if (err) { toast.error(err); return; }
     const ni = stepIndex + 1;
-    if (ni < STEPS.length) setStep(STEPS[ni].key);
+    if (ni < STEPS.length) {
+      setStep(STEPS[ni].key);
+      requestAnimationFrame(() => {
+        const el = document.getElementById("teacher-form-top");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        else window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   }
   function prev() {
     const pi = stepIndex - 1;
-    if (pi >= 0) setStep(STEPS[pi].key);
+    if (pi >= 0) {
+      setStep(STEPS[pi].key);
+      requestAnimationFrame(() => {
+        const el = document.getElementById("teacher-form-top");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        else window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   }
 
   async function submit() {
@@ -100,6 +115,7 @@ export function TeacherApplicationForm({ governorates }: { governorates: Gov[] }
   return (
     <div className="space-y-6">
       {/* stepper */}
+      <div id="teacher-form-top" />
       <Card className="p-4">
         <div className="flex items-center justify-between overflow-x-auto">
           {STEPS.map((s, i) => {
@@ -129,11 +145,11 @@ export function TeacherApplicationForm({ governorates }: { governorates: Gov[] }
         <Card className="p-6 space-y-4">
           <h2 className="text-lg font-bold flex items-center gap-2"><User className="h-5 w-5 text-amber-600" /> البيانات الشخصية</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="الاسم بالعربية *"><Input value={form.fullNameAr} onChange={(e) => set("fullNameAr", e.target.value)} placeholder="الاسم رباعي" /></Field>
-            <Field label="الاسم بالإنجليزية (اختياري)"><Input value={form.fullNameEn} onChange={(e) => set("fullNameEn", e.target.value)} dir="ltr" /></Field>
+            <Field label="الاسم بالعربية *"><Input value={form.fullNameAr} onChange={(e) => set("fullNameAr", arabicOnly(e.target.value))} placeholder="الاسم رباعي" maxLength={120} /></Field>
+            <Field label="الاسم بالإنجليزية (اختياري)"><Input value={form.fullNameEn} onChange={(e) => set("fullNameEn", englishOnly(e.target.value))} dir="ltr" maxLength={120} /></Field>
             <Field label="تاريخ الميلاد *"><Input type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} dir="ltr" /></Field>
             <Field label="الرقم القومي * (١٤ رقم)"><Input value={form.nationalId} onChange={(e) => set("nationalId", e.target.value.replace(/\D/g, "").slice(0, 14))} dir="ltr" className="nums" /></Field>
-            <Field label="رقم الهاتف *"><Input value={form.phone} onChange={(e) => set("phone", e.target.value.replace(/[^\d+]/g, ""))} dir="ltr" placeholder="01XXXXXXXXX" /></Field>
+            <Field label="رقم الهاتف *" help="11 رقماً يبدأ بـ 01"><Input value={form.phone} onChange={(e) => set("phone", digitsOnly(e.target.value).slice(0, 11))} dir="ltr" inputMode="tel" maxLength={11} placeholder="01XXXXXXXXX" /></Field>
             <Field label="البريد الإلكتروني"><Input value={form.email} onChange={(e) => set("email", e.target.value)} dir="ltr" /></Field>
           </div>
           <Field label="النوع">

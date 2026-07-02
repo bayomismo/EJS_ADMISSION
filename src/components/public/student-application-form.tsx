@@ -265,7 +265,7 @@ export function StudentApplicationForm({
   return (
     <div className="space-y-6">
       {/* stepper */}
-      <Card className="p-4">
+      <Card id="apply-form-top" className="p-4 scroll-mt-4">
         <div className="flex items-center justify-between overflow-x-auto">
           {STEPS.map((s, i) => {
             const done = stepIndex > i;
@@ -361,7 +361,7 @@ export function StudentApplicationForm({
                         <div className="flex items-center gap-2 mb-1">
                           <Calendar className="h-4 w-4 text-primary" />
                           <span className="text-sm font-bold text-foreground">
-                            عمر الطالب في ١ أكتوبر {toArabicDigits(String(admYear))}: <span className="nums text-lg">{toArabicNumber(placement.age)}</span> سنة
+                            عمر الطالب في ١ أكتوبر {toArabicDigits(String(admYear))}: <span className="nums text-lg">{placement.parsed.birthDate ? formatAgeArabic(placement.parsed.birthDate) : `${toArabicNumber(placement.age)} سنوات`}</span>
                           </span>
                         </div>
                         {computedGrade && (computedGrade.gradeId === "too-young" || computedGrade.gradeId === "too-old") ? (
@@ -519,7 +519,7 @@ export function StudentApplicationForm({
           <div className="rounded-xl bg-secondary/30 p-4 text-sm space-y-3">
             <ReviewRow label="اسم الطالب" value={form.studentNameAr} />
             <ReviewRow label="الرقم القومي" value={form.nationalId} mono />
-            <ReviewRow label="العمر في أكتوبر" value={placement?.age != null ? `${toArabicNumber(placement.age)} سنة` : "—"} />
+            <ReviewRow label="العمر" value={placement?.parsed.birthDate ? formatAgeArabic(placement.parsed.birthDate) : "—"} />
             <ReviewRow label="المرحلة" value={grades.find((g) => g.id === form.gradeId)?.nameAr} />
             <ReviewRow label="البريد الإلكتروني" value={form.guardianEmail} mono />
             <ReviewRow label="ولي الأمر" value={`${form.guardianName} (${form.guardianRelation})`} />

@@ -26,6 +26,23 @@ export const egyptPhoneSchema = z
 
 export const emailSchema = z.string().email("بريد إلكتروني غير صحيح");
 
+/** Arabic-only text (Arabic chars + whitespace + diacritics). */
+export const ARABIC_TEXT_REGEX = /^[\u0600-\u06FF\s\u0640\u064B-\u0652\u0670]+$/;
+export const arabicNameSchema = z
+  .string()
+  .min(3)
+  .max(120)
+  .regex(ARABIC_TEXT_REGEX, "يجب أن يحتوي الاسم على حروف عربية فقط");
+
+/** English-only text (A-Z, a-z, whitespace, common punctuation). */
+export const ENGLISH_TEXT_REGEX = /^[A-Za-z\s.'\-,]+$/;
+export const englishNameSchema = z
+  .string()
+  .max(120)
+  .regex(ENGLISH_TEXT_REGEX, "يجب أن يحتوي الاسم بالإنجليزية على حروف إنجليزية فقط")
+  .optional()
+  .nullable();
+
 /** A pair of email + retype. */
 export const emailWithRetypeSchema = z
   .object({
@@ -40,13 +57,13 @@ export const emailWithRetypeSchema = z
 // ── Public application schemas ──
 
 export const studentApplicationSchema = z.object({
-  studentNameAr: z.string().min(3, "اسم الطالب بالعربية (٣ أحرف على الأقل)").max(120),
-  studentNameEn: z.string().max(120).optional().nullable(),
+  studentNameAr: arabicNameSchema.refine((v) => v.length >= 3, "اسم الطالب بالعربية (٣ أحرف على الأقل)"),
+  studentNameEn: englishNameSchema,
   birthDate: z.string().min(6, "تاريخ الميلاد مطلوب"),
   gender: z.enum(["MALE", "FEMALE", "MIXED"]),
   nationalId: nationalIdSchema,
   nationality: z.string().default("مصري"),
-  guardianName: z.string().min(3, "اسم ولي الأمر (٣ أحرف على الأقل)").max(120),
+  guardianName: arabicNameSchema.refine((v) => v.length >= 3, "اسم ولي الأمر (٣ أحرف على الأقل)"),
   guardianRelation: z.string().min(2).max(40),
   guardianPhone: egyptPhoneSchema,
   guardianEmail: emailSchema,
@@ -69,8 +86,8 @@ export const studentApplicationSchema = z.object({
 );
 
 export const teacherApplicationSchema = z.object({
-  fullNameAr: z.string().min(3).max(120),
-  fullNameEn: z.string().max(120).optional().nullable(),
+  fullNameAr: arabicNameSchema,
+  fullNameEn: englishNameSchema,
   birthDate: z.string().min(6),
   gender: z.enum(["MALE", "FEMALE", "MIXED"]),
   nationalId: nationalIdSchema,
