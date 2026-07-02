@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import {
   Plus, Search, Download, Upload, MoreHorizontal, Pencil, Trash2,
   Star, Archive, Power, Loader2, X, FileSpreadsheet, CheckCircle2,
-  AlertCircle, Building2,
+  AlertCircle, Building2, MapPin, Phone, FileText, Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +22,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import * as React from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { toArabicNumber } from "@/lib/arabic";
 import { cn } from "@/lib/utils";
+import { Field, FormSection } from "@/components/admin/field";
+import { parseFieldErrors, extractErrorMessage, focusFirstError } from "@/lib/form-errors";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuSeparator,
@@ -57,6 +60,7 @@ export function SchoolsManager({ governorates, cities, facilities, grades }: {
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editorErrors, setEditorErrors] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<School | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -104,6 +108,7 @@ export function SchoolsManager({ governorates, cities, facilities, grades }: {
       governorate: { nameAr: "" }, city: { nameAr: "" },
     } as any);
     setEditorOpen(true);
+    setEditorErrors({});
   }
 
   async function openEdit(s: School) {
@@ -111,6 +116,7 @@ export function SchoolsManager({ governorates, cities, facilities, grades }: {
     const data = await res.json();
     setEditing({ ...s, ...data });
     setEditorOpen(true);
+    setEditorErrors({});
   }
 
   async function saveSchool(payload: any) {
@@ -122,14 +128,21 @@ export function SchoolsManager({ governorates, cities, facilities, grades }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل الحفظ");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const fieldErrors = parseFieldErrors(data);
+        setEditorErrors(fieldErrors);
+        const firstError = Object.values(fieldErrors)[0];
+        toast.error(firstError || data.error || "فشل الحفظ");
+        return;
+      }
       toast.success(isEdit ? "تم تحديث المدرسة" : "تمت إضافة المدرسة");
       setEditorOpen(false);
       setEditing(null);
+      setEditorErrors({});
       fetchList();
     } catch (e: any) {
-      toast.error(e.message || "حدث خطأ");
+      toast.error(extractErrorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -380,6 +393,8 @@ export function SchoolsManager({ governorates, cities, facilities, grades }: {
           grades={grades}
           saving={saving}
           onSave={saveSchool}
+          errors={editorErrors}
+          onErrorsChange={setEditorErrors}
         />
       )}
 
@@ -496,7 +511,18 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
   );
 }
 
-function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCities, facilities, grades, saving, onSave }: any) {
+function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCities, facilities, grades, saving, onSave, errors = {}, onErrorsChange }: any) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>(errors || {});
+  useEffect(() => { setFieldErrors(errors || {}); }, [errors]);
+  function clearError(k: string) {
+    setFieldErrors((p) => { const next = { ...p }; delete next[k]; return next; });
+    onErrorsChange?.(next);
+  }
+  useEffect(() => {
+    if (Object.keys(fieldErrors).length > 0) focusFirstError(formRef.current);
+  }, [fieldErrors]);
+
   const [form, setForm] = useState<any>(() => ({
     code: school.code || "",
     nameAr: school.nameAr || "",
@@ -528,6 +554,8 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    setFieldErrors({});
+    onErrorsChange?.({});
     const payload = {
       ...form,
       capacity: form.capacity ? Number(form.capacity) : null,
@@ -545,17 +573,16 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
           <SheetTitle>{isEdit ? "تعديل مدرسة" : "إضافة مدرسة جديدة"}</SheetTitle>
           <SheetDescription>أدخل بيانات المدرسة بدقة. الحقول المطلوبة مميزة بـ *</SheetDescription>
         </SheetHeader>
-        <form onSubmit={submit} className="space-y-5 py-4">
+        <form ref={formRef} onSubmit={submit} noValidate className="space-y-6 py-4">
           {/* basic */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold text-muted-foreground">البيانات الأساسية</h3>
+          <FormSection title="البيانات الأساسية" description="المعلومات التعريفية للمدرسة" icon={Settings2}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="كود المدرسة *">
-                <Input value={form.code} onChange={(e) => set("code", e.target.value.replace(/\s+/g, "-").toUpperCase())} required className="nums" maxLength={50} />
+              <Field label="كود المدرسة *" htmlFor="school-code" error={fieldErrors.code} help="حروف إنجليزية كبيرة وأرقام وشرطات فقط">
+                <Input id="school-code" value={form.code} onChange={(e) => { set("code", e.target.value.replace(/\s+/g, "-").toUpperCase()); clearError("code"); }} required className="nums" maxLength={50} />
               </Field>
-              <Field label="النوع">
+              <Field label="النوع" htmlFor="school-type">
                 <Select value={form.type} onValueChange={(v) => set("type", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="school-type"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ARABIC">عربي</SelectItem>
                     <SelectItem value="LANGUAGES">لغات</SelectItem>
@@ -563,15 +590,15 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
                 </Select>
               </Field>
             </div>
-            <Field label="الاسم بالعربية *">
-              <Input value={form.nameAr} onChange={(e) => set("nameAr", e.target.value)} required />
+            <Field label="الاسم بالعربية *" htmlFor="school-nameAr" error={fieldErrors.nameAr}>
+              <Input id="school-nameAr" value={form.nameAr} onChange={(e) => { set("nameAr", e.target.value); clearError("nameAr"); }} required />
             </Field>
-            <Field label="الاسم بالإنجليزية">
-              <Input value={form.nameEn} onChange={(e) => set("nameEn", e.target.value)} dir="ltr" />
+            <Field label="الاسم بالإنجليزية" htmlFor="school-nameEn" error={fieldErrors.nameEn} help="اختياري - يُستخدم في السجلات الإنجليزية">
+              <Input id="school-nameEn" value={form.nameEn} onChange={(e) => { set("nameEn", e.target.value); clearError("nameEn"); }} dir="ltr" />
             </Field>
-            <Field label="النوع (بنين/بنات/مختلط)">
+            <Field label="النوع (بنين/بنات/مختلط)" htmlFor="school-gender" error={fieldErrors.gender}>
               <Select value={form.gender} onValueChange={(v) => set("gender", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="school-gender"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MIXED">مختلط</SelectItem>
                   <SelectItem value="MALE">بنين</SelectItem>
@@ -579,59 +606,62 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
                 </SelectContent>
               </Select>
             </Field>
-          </div>
+          </FormSection>
 
           {/* location */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold text-muted-foreground">الموقع</h3>
+          <FormSection title="الموقع" description="المحافظة والمدينة والعنوان الجغرافي" icon={MapPin}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="المحافظة *">
-                <Select value={form.governorateId} onValueChange={(v) => { set("governorateId", v); set("cityId", ""); }}>
-                  <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
+              <Field label="المحافظة *" htmlFor="school-gov" error={fieldErrors.governorateId}>
+                <Select value={form.governorateId} onValueChange={(v) => { set("governorateId", v); set("cityId", ""); clearError("governorateId"); clearError("cityId"); }}>
+                  <SelectTrigger id="school-gov"><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
                   <SelectContent className="max-h-72">
                     {governorates.map((g: Gov) => <SelectItem key={g.id} value={g.id}>{g.nameAr}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="المدينة / الإدارة *">
-                <Select value={form.cityId} onValueChange={(v) => set("cityId", v)} disabled={!form.governorateId}>
-                  <SelectTrigger><SelectValue placeholder={form.governorateId ? "اختر المدينة" : "اختر المحافظة أولاً"} /></SelectTrigger>
+              <Field label="المدينة / الإدارة *" htmlFor="school-city" error={fieldErrors.cityId}>
+                <Select value={form.cityId} onValueChange={(v) => { set("cityId", v); clearError("cityId"); }} disabled={!form.governorateId}>
+                  <SelectTrigger id="school-city"><SelectValue placeholder={form.governorateId ? "اختر المدينة" : "اختر المحافظة أولاً"} /></SelectTrigger>
                   <SelectContent className="max-h-72">
                     {availableCities.map((c: City) => <SelectItem key={c.id} value={c.id}>{c.nameAr}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </Field>
             </div>
-            <Field label="العنوان">
-              <Input value={form.addressAr} onChange={(e) => set("addressAr", e.target.value)} />
+            <Field label="العنوان" htmlFor="school-addr" error={fieldErrors.addressAr}>
+              <Input id="school-addr" value={form.addressAr} onChange={(e) => { set("addressAr", e.target.value); clearError("addressAr"); }} />
             </Field>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="خط العرض (Lat)">
-                <Input value={form.lat} onChange={(e) => set("lat", e.target.value)} type="number" step="any" dir="ltr" />
+              <Field label="خط العرض (Lat)" htmlFor="school-lat" error={fieldErrors.lat} help="رقم بين -90 و 90">
+                <Input id="school-lat" value={form.lat} onChange={(e) => { set("lat", e.target.value); clearError("lat"); }} type="number" step="any" dir="ltr" />
               </Field>
-              <Field label="خط الطول (Lng)">
-                <Input value={form.lng} onChange={(e) => set("lng", e.target.value)} type="number" step="any" dir="ltr" />
+              <Field label="خط الطول (Lng)" htmlFor="school-lng" error={fieldErrors.lng} help="رقم بين -180 و 180">
+                <Input id="school-lng" value={form.lng} onChange={(e) => { set("lng", e.target.value); clearError("lng"); }} type="number" step="any" dir="ltr" />
               </Field>
             </div>
-          </div>
+          </FormSection>
 
           {/* contact + capacity */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold text-muted-foreground">التواصل والسعة</h3>
+          <FormSection title="التواصل والسعة" description="بيانات الاتصال والسعة الاستيعابية" icon={Phone}>
             <div className="grid gap-3 sm:grid-cols-3">
-              <Field label="الهاتف"><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} dir="ltr" /></Field>
-              <Field label="البريد"><Input value={form.email} onChange={(e) => set("email", e.target.value)} dir="ltr" /></Field>
-              <Field label="السعة"><Input value={form.capacity} onChange={(e) => set("capacity", e.target.value)} type="number" dir="ltr" /></Field>
+              <Field label="الهاتف" htmlFor="school-phone" error={fieldErrors.phone} help="11 رقماً يبدأ بـ 01">
+                <Input id="school-phone" value={form.phone} onChange={(e) => { set("phone", e.target.value); clearError("phone"); }} dir="ltr" inputMode="tel" maxLength={11} />
+              </Field>
+              <Field label="البريد" htmlFor="school-email" error={fieldErrors.email}>
+                <Input id="school-email" type="email" value={form.email} onChange={(e) => { set("email", e.target.value); clearError("email"); }} dir="ltr" />
+              </Field>
+              <Field label="السعة" htmlFor="school-capacity" error={fieldErrors.capacity}>
+                <Input id="school-capacity" value={form.capacity} onChange={(e) => { set("capacity", e.target.value); clearError("capacity"); }} type="number" dir="ltr" />
+              </Field>
             </div>
-            <Field label="رابط التقديم الخارجي">
-              <Input value={form.applicationUrl} onChange={(e) => set("applicationUrl", e.target.value)} dir="ltr" placeholder="https://ejs-admission.vercel.app/admission/students" />
+            <Field label="رابط التقديم الخارجي" htmlFor="school-url" error={fieldErrors.applicationUrl} help="اتركه فارغاً لاستخدام رابط البوابة العامة">
+              <Input id="school-url" value={form.applicationUrl} onChange={(e) => { set("applicationUrl", e.target.value); clearError("applicationUrl"); }} dir="ltr" placeholder="https://ejs-admission.vercel.app/admission/students" />
             </Field>
-          </div>
+          </FormSection>
 
           {/* facilities + grades */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold text-muted-foreground">المرافق والمراحل</h3>
-            <Field label="المرافق">
+          <FormSection title="المرافق والمراحل" description="اختر ما ينطبق على هذه المدرسة" icon={Building2} count={form.facilityIds.length + form.gradeIds.length}>
+            <Field label="المرافق" error={fieldErrors.facilityIds}>
               <div className="flex flex-wrap gap-2">
                 {facilities.map((f: any) => {
                   const checked = form.facilityIds.includes(f.id);
@@ -645,7 +675,7 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
                 })}
               </div>
             </Field>
-            <Field label="المراحل الدراسية">
+            <Field label="المراحل الدراسية" error={fieldErrors.gradeIds}>
               <div className="flex flex-wrap gap-2">
                 {grades.map((g: any) => {
                   const checked = form.gradeIds.includes(g.id);
@@ -659,12 +689,14 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
                 })}
               </div>
             </Field>
-          </div>
+          </FormSection>
 
           {/* description */}
-          <Field label="الوصف">
-            <Textarea value={form.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} rows={3} />
-          </Field>
+          <FormSection title="الوصف" description="معلومات إضافية تظهر في صفحة المدرسة العامة" icon={FileText}>
+            <Field label="الوصف" htmlFor="school-desc" error={fieldErrors.descriptionAr}>
+              <Textarea id="school-desc" value={form.descriptionAr} onChange={(e) => { set("descriptionAr", e.target.value); clearError("descriptionAr"); }} rows={3} maxLength={1000} />
+            </Field>
+          </FormSection>
 
           {/* toggles */}
           <div className="grid grid-cols-2 gap-3">
@@ -672,24 +704,24 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
             <ToggleRow label="نشطة" checked={form.isActive} onChange={(v) => set("isActive", v)} />
           </div>
 
-          <SheetFooter className="gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>إلغاء</Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جارٍ الحفظ...</> : isEdit ? "حفظ التعديلات" : "إضافة المدرسة"}
-            </Button>
+          <SheetFooter className="sticky bottom-0 -mx-6 mt-6 flex flex-row items-center justify-between gap-3 border-t border-border bg-background/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+            <p className="text-[11px] text-muted-foreground">
+              {Object.keys(fieldErrors).length > 0 ? (
+                <span className="font-bold text-rose-600">يوجد {Object.keys(fieldErrors).length} حقل يحتاج لتصحيح</span>
+              ) : (
+                <>الحقول المعلّمة بـ <span className="text-rose-600 font-bold">*</span> إلزامية</>
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" onClick={() => { onOpenChange(false); setFieldErrors({}); onErrorsChange?.({}); }} disabled={saving}>إلغاء</Button>
+              <Button type="submit" disabled={saving} className="min-w-32">
+                {saving ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جارٍ الحفظ...</> : isEdit ? "حفظ التعديلات" : "إضافة المدرسة"}
+              </Button>
+            </div>
           </SheetFooter>
         </form>
       </SheetContent>
     </Sheet>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs">{label}</Label>
-      {children}
-    </div>
   );
 }
 
