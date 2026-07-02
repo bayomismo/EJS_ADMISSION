@@ -60,3 +60,7 @@ server.log
 /skills/test-pw.ts
 reset.ts
 test-pw.ts
+
+# Dev cruft
+upload/
+worklog.md
