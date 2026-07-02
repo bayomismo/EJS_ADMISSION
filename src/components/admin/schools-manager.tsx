@@ -540,7 +540,7 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto" side="left">
+      <SheetContent className="w-[95vw] max-w-2xl overflow-y-auto" side="left">
         <SheetHeader>
           <SheetTitle>{isEdit ? "تعديل مدرسة" : "إضافة مدرسة جديدة"}</SheetTitle>
           <SheetDescription>أدخل بيانات المدرسة بدقة. الحقول المطلوبة مميزة بـ *</SheetDescription>
