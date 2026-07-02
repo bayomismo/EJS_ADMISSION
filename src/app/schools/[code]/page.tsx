@@ -21,7 +21,10 @@ export default async function SchoolProfilePage({
 }: {
   params: Promise<{ code: string }>;
 }) {
-  const { code } = await params;
+  const raw = (await params).code;
+  // Try URL-decoded (handles spaces, Arabic, etc.)
+  const code = (() => { try { return decodeURIComponent(raw); } catch { return raw; } })();
+  console.log('[school-detail] raw=' + JSON.stringify(raw) + ' decoded=' + JSON.stringify(code));
   const school = await db.school.findFirst({
     where: { code, isActive: true, isArchived: false },
     include: {
