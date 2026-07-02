@@ -551,7 +551,7 @@ function SchoolEditor({ open, onOpenChange, school, governorates, cities, allCit
             <h3 className="text-sm font-bold text-muted-foreground">البيانات الأساسية</h3>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="كود المدرسة *">
-                <Input value={form.code} onChange={(e) => set("code", e.target.value)} required className="nums" />
+                <Input value={form.code} onChange={(e) => set("code", e.target.value.replace(/\s+/g, "-").toUpperCase())} required className="nums" maxLength={50} />
               </Field>
               <Field label="النوع">
                 <Select value={form.type} onValueChange={(v) => set("type", v)}>

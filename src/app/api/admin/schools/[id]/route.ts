@@ -9,7 +9,7 @@ import { authOptions } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 const schoolUpdateSchema = z.object({
-  code: z.string().min(2).max(50).optional(),
+  code: z.string().min(2).max(50).regex(/^[A-Z0-9\-]+$/, "يجب أن يحتوي كود المدرسة على أحرف إنجليزية كبيرة وأرقام وشرطات فقط").optional(),
   nameAr: z.string().min(2).optional(),
   nameEn: z.string().optional().nullable(),
   governorateId: z.string().min(1).optional(),
