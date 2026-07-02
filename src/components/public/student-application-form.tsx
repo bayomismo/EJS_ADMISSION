@@ -197,12 +197,13 @@ export function StudentApplicationForm({
     }
     setSubmitting(true);
     try {
+      // birthDate is derived from nationalId on the server. Don't send it.
+      const { birthDate: _bd, ...formToSend } = form as any;
       const res = await fetch("/api/public/applications/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...form,
-          birthDate: placement?.birthDate ? placement.birthDate.toISOString().slice(0, 10) : "",
+          ...formToSend,
           termsAccepted: true,
           termsVersion: "2026-v1",
         }),
