@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { computeStudentPlacement } from "@/lib/egyptian-id";
 import { toArabicNumber, toArabicDigits } from "@/lib/arabic";
+import { arabicOnly, englishOnly, digitsOnly } from "@/lib/validators";
 
 interface Gov { id: string; nameAr: string; }
 interface City { id: string; nameAr: string; governorateId: string; }
@@ -183,11 +184,25 @@ export function StudentApplicationForm({
     const err = validateStep(step);
     if (err) { toast.error(err); return; }
     const ni = stepIndex + 1;
-    if (ni < STEPS.length) setStep(STEPS[ni].key);
+    if (ni < STEPS.length) {
+      setStep(STEPS[ni].key);
+      requestAnimationFrame(() => {
+        const el = document.getElementById("apply-form-top");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        else window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   }
   function prev() {
     const pi = stepIndex - 1;
-    if (pi >= 0) setStep(STEPS[pi].key);
+    if (pi >= 0) {
+      setStep(STEPS[pi].key);
+      requestAnimationFrame(() => {
+        const el = document.getElementById("apply-form-top");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        else window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
   }
 
   async function submit() {
@@ -304,8 +319,8 @@ export function StudentApplicationForm({
 
           {/* Student identity */}
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="اسم الطالب بالعربية *"><Input value={form.studentNameAr} onChange={(e) => set("studentNameAr", e.target.value)} placeholder="الاسم رباعي" /></Field>
-            <Field label="الاسم بالإنجليزية (اختياري)"><Input value={form.studentNameEn} onChange={(e) => set("studentNameEn", e.target.value)} dir="ltr" /></Field>
+            <Field label="اسم الطالب بالعربية *"><Input value={form.studentNameAr} onChange={(e) => set("studentNameAr", arabicOnly(e.target.value))} placeholder="الاسم رباعي" maxLength={120} /></Field>
+            <Field label="الاسم بالإنجليزية (اختياري)"><Input value={form.studentNameEn} onChange={(e) => set("studentNameEn", englishOnly(e.target.value))} dir="ltr" maxLength={120} /></Field>
           </div>
 
           {/* Student ID — CRITICAL: triggers auto age + grade */}
@@ -440,7 +455,7 @@ export function StudentApplicationForm({
         <Card className="p-6 space-y-4">
           <h2 className="text-lg font-bold flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> بيانات ولي الأمر</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="اسم ولي الأمر *"><Input value={form.guardianName} onChange={(e) => set("guardianName", e.target.value)} /></Field>
+            <Field label="اسم ولي الأمر *"><Input value={form.guardianName} onChange={(e) => set("guardianName", arabicOnly(e.target.value))} maxLength={120} /></Field>
             <Field label="صلة القرابة">
               <Select value={form.guardianRelation} onValueChange={(v) => set("guardianRelation", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -451,7 +466,7 @@ export function StudentApplicationForm({
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="رقم الهاتف *"><Input value={form.guardianPhone} onChange={(e) => set("guardianPhone", e.target.value.replace(/[^\d+]/g, ""))} dir="ltr" placeholder="01XXXXXXXXX" /></Field>
+            <Field label="رقم الهاتف *" help="11 رقماً يبدأ بـ 01"><Input value={form.guardianPhone} onChange={(e) => set("guardianPhone", digitsOnly(e.target.value).slice(0, 11))} dir="ltr" inputMode="tel" maxLength={11} placeholder="01XXXXXXXXX" /></Field>
             <Field label="الرقم القومي لولي الأمر * (١٤ رقم)">
               <Input value={form.guardianNationalId} onChange={(e) => set("guardianNationalId", e.target.value.replace(/\D/g, "").slice(0, 14))} dir="ltr" className="nums" />
             </Field>
