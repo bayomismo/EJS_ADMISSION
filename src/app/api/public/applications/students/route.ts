@@ -50,8 +50,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 3. Parse + validate.
-  const body = await req.json().catch(() => null);
+  // 3. Parse + validate. Extract birth date from national ID BEFORE
+  // validation so the client doesn't need to send it (the form may
+  // submit an empty string when placement.birthDate is null).
+  const body = await req.json().catch(() => null) ?? {};
+  if (body && typeof body.nationalId === "string" && body.nationalId.length === 14) {
+    const idParsed = parseEgyptianId(body.nationalId);
+    if (idParsed.valid && idParsed.birthDate) {
+      body.birthDate = idParsed.birthDate.toISOString().slice(0, 10);
+    }
+  }
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
@@ -59,16 +67,6 @@ export async function POST(req: NextRequest) {
       { status: 422 }
     );
   }
-  // 3a. Server-side birth date extraction from national ID. Never trust the
-  // client’s birthDate — the client may submit an empty or stale value.
-  const idParsed = parseEgyptianId(parsed.data.nationalId);
-  if (!idParsed.valid || !idParsed.birthDate) {
-    return NextResponse.json(
-      { error: "الرقم القومي غير صالح أو لا يمكن استخراج تاريخ الميلاد منه" },
-      { status: 422 }
-    );
-  }
-  parsed.data.birthDate = idParsed.birthDate.toISOString().slice(0, 10);
   if (!parsed.data.termsAccepted) {
     return NextResponse.json(
       { error: "يجب الموافقة على الشروط والأحكام قبل التقديم" },
