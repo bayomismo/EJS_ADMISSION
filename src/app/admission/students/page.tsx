@@ -148,6 +148,14 @@ export default async function StudentAdmissionLandingPage() {
               )}
             </Button>
           </Card>
+          <div className="mt-4">
+            <Link
+              href="/admission/status?type=students"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <FileText className="h-4 w-4" /> هل تقدمت من قبل؟ تحقق من حالة طلبك
+            </Link>
+          </div>
         </section>
       </div>
     </PublicShell>

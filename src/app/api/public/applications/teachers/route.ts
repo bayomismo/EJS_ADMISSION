@@ -61,6 +61,32 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // 4b. One active application per national ID. A teacher may only have
+  // ONE non-rejected application at a time. Resubmission is allowed
+  // after the admin marks the previous one REJECTED.
+  const existing = await db.teacherApplication.findFirst({
+    where: {
+      nationalId: parsed.data.nationalId,
+      status: { not: "REJECTED" },
+    },
+    select: { id: true, referenceNo: true, status: true, submittedAt: true },
+    orderBy: { submittedAt: "desc" },
+  });
+  if (existing) {
+    return NextResponse.json(
+      {
+        error: "يوجد طلب سابق مسجل بنفس الرقم القومي ولم تتم معالجته بعد.",
+        code: "DUPLICATE_APPLICATION",
+        details: {
+          referenceNo: existing.referenceNo,
+          status: existing.status,
+          submittedAt: existing.submittedAt.toISOString(),
+        },
+      },
+      { status: 409 }
+    );
+  }
+
   // 4. Validate preferred governorate if supplied.
   if (parsed.data.preferredGovernorateId) {
     const gov = await db.governorate.findUnique({

@@ -84,6 +84,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // 4b. One active application per national ID. A student may only have
+  // ONE non-rejected application at a time. Once the admin marks it
+  // REJECTED the parent may submit again (e.g. to fix information).
+  const existing = await db.studentApplication.findFirst({
+    where: {
+      nationalId: parsed.data.nationalId,
+      status: { not: "REJECTED" },
+    },
+    select: { id: true, referenceNo: true, status: true, submittedAt: true },
+    orderBy: { submittedAt: "desc" },
+  });
+  if (existing) {
+    return NextResponse.json(
+      {
+        error: "يوجد طلب سابق مسجل بنفس الرقم القومي ولم تتم معالجته بعد.",
+        code: "DUPLICATE_APPLICATION",
+        details: {
+          referenceNo: existing.referenceNo,
+          status: existing.status,
+          submittedAt: existing.submittedAt.toISOString(),
+        },
+      },
+      { status: 409 }
+    );
+  }
+
   // 5. Validate school exists and matches the supplied governorate/city.
   const school = await db.school.findFirst({
     where: {

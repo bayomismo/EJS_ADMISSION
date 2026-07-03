@@ -95,7 +95,19 @@ export function TeacherApplicationForm({ governorates }: { governorates: Gov[] }
         body: JSON.stringify({ ...form, termsAccepted: true, termsVersion: "2026-v1" }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل إرسال الطلب");
+      if (!res.ok) {
+        if (res.status === 409 && data.code === "DUPLICATE_APPLICATION") {
+          const refNo = data.details?.referenceNo;
+          toast.error(
+            refNo
+              ? `يوجد طلب سابق بنفس الرقم القومي\nالرقم المرجعي: ${refNo}\nيمكنك متابعة حالته بدلاً من تقديم طلب جديد.`
+              : "يوجد طلب سابق بنفس الرقم القومي ولم تتم معالجته بعد.",
+            { duration: 10000 }
+          );
+          throw new Error("DUPLICATE_APPLICATION");
+        }
+        throw new Error(data.error || "فشل إرسال الطلب");
+      }
       toast.success("تم إرسال طلبك بنجاح");
       router.push(`/admission/teachers/success?ref=${encodeURIComponent(data.referenceNo)}`);
     } catch (e: any) {

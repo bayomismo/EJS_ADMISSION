@@ -218,6 +218,17 @@ export function StudentApplicationForm({
       });
       const data = await res.json();
       if (!res.ok) {
+        // Special handling: 409 duplicate application
+        if (res.status === 409 && data.code === "DUPLICATE_APPLICATION") {
+          const refNo = data.details?.referenceNo;
+          toast.error(
+            refNo
+              ? `يوجد طلب سابق بنفس الرقم القومي\nالرقم المرجعي: ${refNo}\nيمكنك متابعة حالته بدلاً من تقديم طلب جديد.`
+              : "يوجد طلب سابق بنفس الرقم القومي ولم تتم معالجته بعد.",
+            { duration: 10000 }
+          );
+          throw new Error("DUPLICATE_APPLICATION");
+        }
         // Build a detailed error message from the Zod field errors
         const details = data.details?.fieldErrors;
         let detailMsg = data.error || "فشل إرسال الطلب";
