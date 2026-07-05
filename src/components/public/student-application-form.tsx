@@ -24,7 +24,7 @@ import { arabicOnly, englishOnly, digitsOnly, formatAgeArabic } from "@/lib/vali
 
 interface Gov { id: string; nameAr: string; }
 interface City { id: string; nameAr: string; governorateId: string; }
-interface School { id: string; nameAr: string; code: string; governorateId: string; cityId: string; }
+interface School { id: string; nameAr: string; code: string; governorateId: string; cityId: string; type?: string; }
 interface Grade { id: string; nameAr: string; }
 
 type Step = "terms" | "student" | "guardian" | "placement" | "review";
@@ -565,7 +565,7 @@ export function StudentApplicationForm({
           <Field label="المدرسة *">
             <Select value={form.schoolId} onValueChange={(v) => set("schoolId", v)} disabled={!form.cityId}>
               <SelectTrigger><SelectValue placeholder={form.cityId ? "اختر المدرسة" : "اختر المدينة أولاً"} /></SelectTrigger>
-              <SelectContent className="max-h-72">{filteredSchools.map((s) => <SelectItem key={s.id} value={s.id}>{s.nameAr} ({s.code})</SelectItem>)}</SelectContent>
+              <SelectContent className="max-h-72">{filteredSchools.map((s) => <SelectItem key={s.id} value={s.id}>{s.nameAr}{s.type === "ARABIC" ? " - عربي" : " - لغات"} ({s.code})</SelectItem>)}</SelectContent>
             </Select>
           </Field>
           <Field label="المدرسة السابقة (إن وجدت)"><Input value={form.previousSchool} onChange={(e) => set("previousSchool", e.target.value)} /></Field>
@@ -589,7 +589,12 @@ export function StudentApplicationForm({
             <ReviewRow label="الهاتف" value={form.guardianPhone} mono />
             <ReviewRow label="المحافظة" value={governorates.find((g) => g.id === form.governorateId)?.nameAr} />
             <ReviewRow label="المدينة" value={cities.find((c) => c.id === form.cityId)?.nameAr} />
-            <ReviewRow label="المدرسة" value={schools.find((s) => s.id === form.schoolId)?.nameAr} />
+            <ReviewRow label="المدرسة" value={(() => {
+              const sc = schools.find((s) => s.id === form.schoolId);
+              if (!sc) return undefined;
+              const typeLabel = sc.type === "ARABIC" ? " - عربي" : " - لغات";
+              return `${sc.nameAr}${typeLabel} (${sc.code})`;
+            })()} />
             <ReviewRow label="العنوان" value={form.addressAr} />
           </div>
           <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
