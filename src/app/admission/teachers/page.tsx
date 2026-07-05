@@ -19,10 +19,9 @@ export default async function TeacherAdmissionLandingPage() {
   const settings = await getSiteSettings();
   const schoolsCount = await db.school.count({ where: { isActive: true, isArchived: false } });
 
-  const [heroTitle, heroSubtitle, termsOverview] = await Promise.all([
+  const [heroTitle, heroSubtitle] = await Promise.all([
     getContent("admission.teachers.heroTitle", "انضم لفريق المدارس المصرية اليابانية"),
     getContent("admission.teachers.heroSubtitle", `تقدم للعمل بمنهجية «توكاتسو» اليابانية — بيئة تعليمية متميزة في ${toArabicNumber(schoolsCount)} مدرسة على مستوى الجمهورية`),
-    getContent("terms.overview", ""),
   ]);
 
   const steps = [
@@ -119,44 +118,6 @@ export default async function TeacherAdmissionLandingPage() {
             </div>
           </Card>
         </div>
-
-        {/* terms & conditions summary */}
-        <section>
-          <SectionHeading
-            title="الشروط والأحكام"
-            subtitle="الموافقة على شروط التقديم للمعلمين إلزامية قبل إرسال الطلب"
-            centered
-          />
-          <Card className="mx-auto max-w-4xl p-6">
-            {termsOverview ? (
-              <pre className="whitespace-pre-wrap text-sm leading-loose text-foreground/90 font-sans">{termsOverview}</pre>
-            ) : (
-              <p className="text-sm text-muted-foreground">لم يتم تعريف ملخص الشروط بعد.</p>
-            )}
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-3 border-t border-border pt-5">
-              <Link
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-600/90 transition-colors"
-              >
-                <FileText className="h-4 w-4" /> اقرأ الشروط كاملةً
-                <ArrowLeft className="h-3.5 w-3.5" />
-              </Link>
-              <Link
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-4 py-2 text-sm font-medium hover:bg-secondary/70 transition-colors"
-              >
-                <ShieldCheck className="h-4 w-4" /> سياسة الخصوصية
-              </Link>
-              <span className="text-xs text-muted-foreground">
-                النصّ قابل للتعديل من قبل إدارة المنصة
-              </span>
-            </div>
-          </Card>
-        </section>
 
         <section className="text-center">
           <Card className="inline-block p-8 bg-gradient-to-l from-amber-600 to-orange-600 text-white">

@@ -1,18 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { FileText, Lock, CheckCircle2, AlertCircle, Loader2, ChevronLeft, ExternalLink } from "lucide-react";
+import { FileText, Lock, CheckCircle2, AlertCircle, Loader2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-interface TermsContent {
-  title: string;
-  body: string;
-  source: "cms" | "fallback";
-}
+interface TermsPage { id: string; titleAr: string; bodyAr: string; }
 
 /**
  * TermsGate — enforces that the user reads + acknowledges the terms before
@@ -20,29 +16,19 @@ interface TermsContent {
  *  1. The terms text has been scrolled to the bottom (read proof), AND
  *  2. The confirmation checkbox is checked.
  * Server-side also enforces termsAccepted=true on submission (defense in depth).
- *
- * Content comes from a CMS content block (admin-editable at
- * /admin/content, group "الشروط والخصوصية"). Pass `contentKey` to choose
- * which block to load; if absent, the `terms.student` block is used.
  */
 export function TermsGate({
-  contentKey = "terms.student",
-  fallbackTitle = "الشروط والأحكام",
-  fallbackBody = "يجب قراءة الشروط والموافقة عليها قبل التقديم.",
+  termsSlug,
   accent = "crimson",
   ctaLabel = "أوافق وأبدأ التقديم",
-  fullTermsHref,
   onAccepted,
 }: {
-  contentKey?: string;
-  fallbackTitle?: string;
-  fallbackBody?: string;
+  termsSlug: string;
   accent?: "crimson" | "gold";
   ctaLabel?: string;
-  fullTermsHref?: string; // optional link to the full /terms page
   onAccepted: () => void;
 }) {
-  const [terms, setTerms] = useState<TermsContent | null>(null);
+  const [terms, setTerms] = useState<TermsPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [scrolled, setScrolled] = useState(false);
@@ -51,35 +37,12 @@ export function TermsGate({
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/public/content?key=${encodeURIComponent(contentKey)}`)
-      .then((r) => {
-        if (r.status === 404) return { notFound: true };
-        if (!r.ok) throw new Error("فشل تحميل الشروط");
-        return r.json();
-      })
-      .then((d) => {
-        if (cancelled) return;
-        if (d?.notFound) {
-          setTerms({ title: fallbackTitle, body: fallbackBody, source: "fallback" });
-          setError(""); // not an error, just no CMS block defined yet
-        } else {
-          setTerms({
-            title: d.label || fallbackTitle,
-            body: d.valueAr || fallbackBody,
-            source: "cms",
-          });
-        }
-        setLoading(false);
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          setError(e.message);
-          setTerms({ title: fallbackTitle, body: fallbackBody, source: "fallback" });
-          setLoading(false);
-        }
-      });
+    fetch(`/api/public/terms?slug=${termsSlug}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("فشل تحميل الشروط"))))
+      .then((d) => { if (!cancelled) { setTerms(d); setLoading(false); } })
+      .catch((e) => { if (!cancelled) { setError(e.message); setLoading(false); } });
     return () => { cancelled = true; };
-  }, [contentKey, fallbackTitle, fallbackBody]);
+  }, [termsSlug]);
 
   function onScroll() {
     const el = scrollRef.current;
@@ -102,17 +65,12 @@ export function TermsGate({
         <FileText className="h-6 w-6" />
         <div className="flex-1">
           <h2 className="text-lg font-bold text-foreground">
-            {loading ? "جارٍ تحميل الشروط..." : terms?.title || fallbackTitle}
+            {loading ? "جارٍ تحميل الشروط..." : terms?.titleAr || "الشروط والأحكام"}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             يجب قراءة الشروط بالكامل والموافقة عليها قبل التقديم
           </p>
         </div>
-        {terms?.source === "cms" && (
-          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700" title="نص قابل للتعديل من الإدارة">
-            قابل للتعديل
-          </span>
-        )}
         <Lock className="h-5 w-5 opacity-60" />
       </div>
 
@@ -129,7 +87,7 @@ export function TermsGate({
             onScroll={onScroll}
             className="max-h-80 overflow-y-auto p-5 text-sm leading-loose text-foreground/90 whitespace-pre-line scroll-area-custom bg-secondary/20"
           >
-            {terms.body}
+            {terms.bodyAr}
           </div>
 
           {!scrolled && (
@@ -155,16 +113,6 @@ export function TermsGate({
                 <p className="text-xs text-muted-foreground mt-1">
                   بإقبولك لهذه الشروط، فإنك تتعهد بتقديم بيانات صحيحة ومستندات أصلية عند الطلب
                 </p>
-                {fullTermsHref && (
-                  <a
-                    href={fullTermsHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    <ExternalLink className="h-3 w-3" /> اقرأ الشروط كاملةً في صفحة منفصلة
-                  </a>
-                )}
               </div>
             </label>
 

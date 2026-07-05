@@ -41,7 +41,6 @@ const GROUPS = [
   { key: "homepage", label: "الصفحة الرئيسية", icon: "🏠" },
   { key: "admission.students", label: "تقديم الطلاب", icon: "🎓" },
   { key: "admission.teachers", label: "تقديم المعلمين", icon: "👨‍🏫" },
-  { key: "terms", label: "الشروط والخصوصية", icon: "📜" },
   { key: "footer", label: "الفوتر", icon: "📋" },
   { key: "general", label: "عام", icon: "📝" },
 ];

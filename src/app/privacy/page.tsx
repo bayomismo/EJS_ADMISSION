@@ -1,109 +1,75 @@
 import { PublicShell } from "@/components/public/public-shell";
 import { Card } from "@/components/ui/card";
-import { Shield } from "lucide-react";
-import { db } from "@/lib/db";
-import { getContent } from "@/lib/content";
-
-export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "سياسة الخصوصية | المدارس المصرية اليابانية",
   description: "كيف نتعامل مع بياناتك الشخصية على منصة التقديم للمدارس المصرية اليابانية",
 };
 
-export default async function PrivacyPage() {
-  const body = await getContent(
-    "terms.privacy",
-    "لم يتم تعريف سياسة الخصوصية بعد. يرجى مراجعة الإدارة."
-  );
-  const contentBlock = await db.contentBlock.findUnique({
-    where: { key: "terms.privacy" },
-    select: { updatedAt: true },
-  });
-  const sections = parseBulletSections(body);
-
+export default function PrivacyPage() {
   return (
     <PublicShell>
       <div className="mx-auto max-w-3xl space-y-6 px-4 py-10">
         <header>
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
-            <Shield className="h-3.5 w-3.5" /> وثيقة رسمية
-          </div>
-          <h1 className="mt-3 text-3xl font-extrabold">سياسة الخصوصية</h1>
+          <h1 className="text-3xl font-extrabold">سياسة الخصوصية</h1>
           <p className="mt-2 text-muted-foreground">
             توضح هذه الصفحة كيف تجمع المدارس المصرية اليابانية بياناتك وتستخدمها وتحميها.
           </p>
         </header>
 
-        {sections.length === 1 ? (
-          <Card className="p-5">
-            <pre className="whitespace-pre-wrap text-sm leading-loose text-foreground/90 font-sans">{body}</pre>
-          </Card>
-        ) : (
-          sections.map((s, i) => (
-            <Card key={i} className="p-5 space-y-3">
-              {s.title && <h2 className="text-xl font-bold text-primary">{s.title}</h2>}
-              {s.intro && <p className="text-sm leading-loose text-foreground/90">{s.intro}</p>}
-              {s.bullets.length > 0 && (
-                <ul className="list-disc pr-5 space-y-1 text-sm text-foreground/90">
-                  {s.bullets.map((b, j) => (<li key={j}>{b}</li>))}
-                </ul>
-              )}
-              {s.tail && <p className="text-sm leading-loose text-foreground/90">{s.tail}</p>}
-            </Card>
-          ))
-        )}
+        <Card className="p-5 space-y-4">
+          <h2 className="text-xl font-bold">البيانات التي نجمعها</h2>
+          <p>عند تقديم طلب التحاق، نجمع:</p>
+          <ul className="list-disc pr-5 space-y-1 text-sm">
+            <li>بيانات الطالب: الاسم، الرقم القومي، تاريخ الميلاد، النوع، الجنسية</li>
+            <li>بيانات ولي الأمر: الاسم، الرقم القومي، الهاتف، البريد الإلكتروني، صلة القرابة، المهنة</li>
+            <li>بيانات العنوان: المحافظة، المدينة، المدرسة المختارة، المرحلة، العنوان</li>
+            <li>بيانات اختيارية: المدرسة السابقة، إجابات التقييم، ملاحظات</li>
+          </ul>
+        </Card>
 
-        {contentBlock?.updatedAt && (
-          <p className="text-xs text-muted-foreground">
-            آخر تحديث:{" "}
-            {contentBlock.updatedAt.toLocaleDateString("ar-EG", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+        <Card className="p-5 space-y-4">
+          <h2 className="text-xl font-bold">كيف نستخدم بياناتك</h2>
+          <p>نستخدم بياناتك فقط لـ:</p>
+          <ul className="list-disc pr-5 space-y-1 text-sm">
+            <li>معالجة طلب الالتحاق وتأكيد الأهلية</li>
+            <li>التواصل مع ولي الأمر بخصوص نتيجة القبول</li>
+            <li>إعداد التقارير الإحصائية المجهولة الهوية (لا تحتوي على بيانات شخصية)</li>
+          </ul>
+          <p className="text-sm">لا نبيع بياناتك ولا نشاركها مع طرف ثالث إلا بأمر قضائي أو بموافقتك المكتوبة.</p>
+        </Card>
+
+        <Card className="p-5 space-y-4">
+          <h2 className="text-xl font-bold">حقوقك</h2>
+          <ul className="list-disc pr-5 space-y-1 text-sm">
+            <li>طلب تصحيح أي بيانات خاطئة</li>
+            <li>طلب حذف بياناتك بعد انتهاء سنة دراسية كاملة من تقديم الطلب</li>
+            <li>طلب نسخة من بياناتك بصيغة مقروءة</li>
+          </ul>
+          <p className="text-sm">
+            لممارسة أي من هذه الحقوق، تواصل مع الإدارة عبر صفحة{" "}
+            <a href="/contact" className="underline">اتصل بنا</a>.
           </p>
-        )}
+        </Card>
+
+        <Card className="p-5 space-y-4">
+          <h2 className="text-xl font-bold">الاحتفاظ بالبيانات</h2>
+          <p className="text-sm">
+            نحتفظ ببيانات الطلب لمدة سنة دراسية واحدة بعد تقديمها لأغراض التدقيق، ثم يتم حذفها تلقائياً.
+            بيانات الحساب الإداري تُحذف خلال 30 يوماً من إيقاف الحساب.
+          </p>
+        </Card>
+
+        <Card className="p-5 space-y-4">
+          <h2 className="text-xl font-bold">الأمان</h2>
+          <p className="text-sm">
+            نستخدم تشفير TLS/HSTS، ونُخزّن كلمات المرور مشفّرة (Argon2/scrypt)، ونقيد الوصول الإداري
+            بالصلاحيات، ونسجل كل تعديل في سجل مراجعة قابل للمراجعة.
+          </p>
+        </Card>
+
+        <p className="text-xs text-muted-foreground">آخر تحديث: ٢٠٢٥/٠١</p>
       </div>
     </PublicShell>
   );
-}
-
-interface PrivacySection { title?: string; intro?: string; bullets: string[]; tail?: string; }
-
-function parseBulletSections(text: string): PrivacySection[] {
-  // Headings in the privacy block end with ":". We split on lines that
-  // are *just* a heading (no colon + bullets after). For each section we
-  // capture: title (everything before first ":"), intro line, bullet
-  // list, and any trailing paragraphs.
-  const lines = text.split(/\r?\n/);
-  const sections: PrivacySection[] = [];
-  let cur: PrivacySection = { bullets: [] };
-
-  function push() {
-    if (cur.title || cur.intro || cur.bullets.length || cur.tail) sections.push(cur);
-    cur = { bullets: [] };
-  }
-
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line) continue;
-    if (line.endsWith(":")) {
-      push();
-      cur.title = line.replace(/:$/, "").trim();
-      continue;
-    }
-    if (/^[•\-\*]\s+/.test(line)) {
-      cur.bullets.push(line.replace(/^[•\-\*]\s+/, "").trim());
-      continue;
-    }
-    if (cur.title && !cur.intro) {
-      cur.intro = line;
-    } else if (cur.title) {
-      cur.tail = (cur.tail ? cur.tail + " " : "") + line;
-    }
-  }
-  push();
-  if (sections.length === 0) return [{ bullets: [], body: text } as any];
-  return sections;
 }

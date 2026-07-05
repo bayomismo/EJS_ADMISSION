@@ -20,12 +20,11 @@ export default async function StudentAdmissionLandingPage() {
   const live = computeLiveStatus(settings.admission);
   const schoolsCount = await db.school.count({ where: { isActive: true, isArchived: false } });
 
-  const [heroTitle, heroSubtitle, requirementsLabel, stepsSubtitle, termsOverview] = await Promise.all([
+  const [heroTitle, heroSubtitle, requirementsLabel, stepsSubtitle] = await Promise.all([
     getContent("admission.students.heroTitle", "تقديم طلب الالتحاق بالمدارس المصرية اليابانية"),
     getContent("admission.students.heroSubtitle", `للعام الدراسي ${settings.admission.year} — ${settings.admission.phasesLabel}`),
     getContent("admission.students.requirementsTitle", "شروط ومتطلبات التقديم"),
     getContent("admission.students.stepsSubtitle", "أربع خطوات بسيطة لإتمام طلب الالتحاق"),
-    getContent("terms.overview", ""),
   ]);
 
   const steps = [
@@ -134,44 +133,6 @@ export default async function StudentAdmissionLandingPage() {
             </div>
           </Card>
         </div>
-
-        {/* terms & conditions summary */}
-        <section>
-          <SectionHeading
-            title="الشروط والأحكام"
-            subtitle="الموافقة على الشروط إلزامية لقبول الطلب — اقرأها كاملةً قبل المتابعة"
-            centered
-          />
-          <Card className="mx-auto max-w-4xl p-6">
-            {termsOverview ? (
-              <pre className="whitespace-pre-wrap text-sm leading-loose text-foreground/90 font-sans">{termsOverview}</pre>
-            ) : (
-              <p className="text-sm text-muted-foreground">لم يتم تعريف ملخص الشروط بعد.</p>
-            )}
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-3 border-t border-border pt-5">
-              <Link
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full bg-crimson px-4 py-2 text-sm font-bold text-white hover:bg-crimson/90 transition-colors"
-              >
-                <FileText className="h-4 w-4" /> اقرأ الشروط كاملةً
-                <ArrowLeft className="h-3.5 w-3.5" />
-              </Link>
-              <Link
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-4 py-2 text-sm font-medium hover:bg-secondary/70 transition-colors"
-              >
-                <ShieldCheck className="h-4 w-4" /> سياسة الخصوصية
-              </Link>
-              <span className="text-xs text-muted-foreground">
-                النصّ قابل للتعديل من قبل إدارة المنصة — راجع <Link href="/admin/content" className="underline">محرر النصوص</Link>
-              </span>
-            </div>
-          </Card>
-        </section>
 
         {/* CTA */}
         <section className="text-center">
