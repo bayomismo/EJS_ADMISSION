@@ -60,7 +60,7 @@ export function StudentApplicationForm({
         guardianEmail: "", guardianEmailConfirm: "",
         guardianName: "", guardianRelation: "father", guardianPhone: "",
         guardianNationalId: "", guardianOccupation: "",
-        governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "",
+        governorateId: "", cityId: "", schoolId: "", schoolType: "", gradeId: "", previousSchool: "",
         addressAr: "",
         skillsAnswers: "", notes: "",
       };
@@ -75,7 +75,7 @@ export function StudentApplicationForm({
           guardianEmail: "", guardianEmailConfirm: "",
           guardianName: "", guardianRelation: "father", guardianPhone: "",
           guardianNationalId: "", guardianOccupation: "",
-          governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "",
+          governorateId: "", cityId: "", schoolId: "", schoolType: "", gradeId: "", previousSchool: "",
           addressAr: "",
           skillsAnswers: "", notes: "",
         }, ...restored };
@@ -87,7 +87,7 @@ export function StudentApplicationForm({
       guardianEmail: "", guardianEmailConfirm: "",
       guardianName: "", guardianRelation: "father", guardianPhone: "",
       guardianNationalId: "", guardianOccupation: "",
-      governorateId: "", cityId: "", schoolId: "", gradeId: "", previousSchool: "",
+      governorateId: "", cityId: "", schoolId: "", schoolType: "", gradeId: "", previousSchool: "",
       addressAr: "",
       skillsAnswers: "", notes: "",
     };
@@ -145,8 +145,30 @@ export function StudentApplicationForm({
 
   function set(k: string, v: any) { setForm((p: any) => ({ ...p, [k]: v })); }
 
-  const filteredCities = useMemo(() => cities.filter((c) => c.governorateId === form.governorateId), [cities, form.governorateId]);
-  const filteredSchools = useMemo(() => schools.filter((s) => s.governorateId === form.governorateId && s.cityId === form.cityId), [schools, form.governorateId, form.cityId]);
+  // Cascade filters: schoolType → governorate → city → school
+  // Each level only shows options that lead to a valid choice in the next level.
+  const schoolsOfType = useMemo(
+    () => form.schoolType ? schools.filter((s) => s.type === form.schoolType) : [],
+    [schools, form.schoolType]
+  );
+  const filteredGovernorates = useMemo(
+    () => form.schoolType
+      ? governorates.filter((g) => schoolsOfType.some((s) => s.governorateId === g.id))
+      : governorates,
+    [governorates, schoolsOfType, form.schoolType]
+  );
+  const filteredCities = useMemo(
+    () => form.schoolType
+      ? cities.filter((c) => c.governorateId === form.governorateId && schoolsOfType.some((s) => s.cityId === c.id))
+      : cities.filter((c) => c.governorateId === form.governorateId),
+    [cities, schoolsOfType, form.schoolType, form.governorateId]
+  );
+  const filteredSchools = useMemo(
+    () => form.schoolType
+      ? schoolsOfType.filter((s) => s.governorateId === form.governorateId && s.cityId === form.cityId)
+      : schools.filter((s) => s.governorateId === form.governorateId && s.cityId === form.cityId),
+    [schoolsOfType, schools, form.schoolType, form.governorateId, form.cityId]
+  );
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
 
@@ -172,6 +194,7 @@ export function StudentApplicationForm({
       if (!form.addressAr) return "العنوان مطلوب";
     }
     if (s === "placement") {
+      if (!form.schoolType) return "اختر نوع التعليم (عربي / لغات)";
       if (!form.governorateId) return "اختر المحافظة";
       if (!form.cityId) return "اختر المدينة";
       if (!form.schoolId) return "اختر المدرسة";
@@ -205,8 +228,8 @@ export function StudentApplicationForm({
     }
     setSubmitting(true);
     try {
-      // birthDate is derived from nationalId on the server. Don't send it.
-      const { birthDate: _bd, ...formToSend } = form as any;
+      // birthDate is derived from nationalId on the server, schoolType is a UI-only filter.
+      const { birthDate: _bd, schoolType: _st, ...formToSend } = form as any;
       const res = await fetch("/api/public/applications/students", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -494,6 +517,27 @@ export function StudentApplicationForm({
         <Card className="p-6 space-y-4">
           <h2 className="text-lg font-bold flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /> اختيار المدرسة</h2>
 
+          {/* school type — first filter */}
+          <Field label="نوع التعليم *" help="يحدد نوع المدارس المعروضة في القوائم التالية">
+            <Select value={form.schoolType} onValueChange={(v) => { set("schoolType", v); set("governorateId", ""); set("cityId", ""); set("schoolId", ""); }}>
+              <SelectTrigger><SelectValue placeholder="اختر نوع التعليم" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ARABIC">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+                    مدارس عربي
+                  </span>
+                </SelectItem>
+                <SelectItem value="LANGUAGES">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+                    مدارس لغات
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+
           {/* grade auto-set, shown read-only */}
           <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4">
             <div className="flex items-center gap-2">
@@ -505,10 +549,10 @@ export function StudentApplicationForm({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="المحافظة *">
-              <Select value={form.governorateId} onValueChange={(v) => { set("governorateId", v); set("cityId", ""); set("schoolId", ""); }}>
-                <SelectTrigger><SelectValue placeholder="اختر المحافظة" /></SelectTrigger>
-                <SelectContent className="max-h-72">{governorates.map((g) => <SelectItem key={g.id} value={g.id}>{g.nameAr}</SelectItem>)}</SelectContent>
+            <Field label="المحافظة *" help={form.schoolType ? "المحافظات التي بها مدارس من النوع المختار" : "اختر نوع التعليم أولاً"}>
+              <Select value={form.governorateId} onValueChange={(v) => { set("governorateId", v); set("cityId", ""); set("schoolId", ""); }} disabled={!form.schoolType}>
+                <SelectTrigger><SelectValue placeholder={form.schoolType ? "اختر المحافظة" : "اختر نوع التعليم أولاً"} /></SelectTrigger>
+                <SelectContent className="max-h-72">{filteredGovernorates.map((g) => <SelectItem key={g.id} value={g.id}>{g.nameAr}</SelectItem>)}</SelectContent>
               </Select>
             </Field>
             <Field label="المدينة / الإدارة *">

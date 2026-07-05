@@ -12,7 +12,7 @@ export default async function StudentApplyPage() {
   const [governorates, cities, schools, grades] = await Promise.all([
     db.governorate.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" }, select: { id: true, nameAr: true } }),
     db.city.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" }, select: { id: true, nameAr: true, governorateId: true } }),
-    db.school.findMany({ where: { isActive: true, isArchived: false }, orderBy: { nameAr: "asc" }, select: { id: true, nameAr: true, code: true, governorateId: true, cityId: true } }),
+    db.school.findMany({ where: { isActive: true, isArchived: false }, orderBy: { nameAr: "asc" }, select: { id: true, nameAr: true, code: true, governorateId: true, cityId: true, type: true } }),
     db.grade.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, nameAr: true } }),
   ]);
 
