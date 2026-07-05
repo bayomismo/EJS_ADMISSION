@@ -143,7 +143,15 @@ export function TeacherApplicationForm({ governorates }: { governorates: Gov[] }
       </Card>
 
       {step === "terms" && (
-        <TermsGate termsSlug="teacher-terms" accent="gold" ctaLabel="أوافق وأبدأ التقديم" onAccepted={() => { setStep("personal"); scrollToTop(); }} />
+        <TermsGate
+          contentKey="terms.teacher"
+          fallbackTitle="شروط وأحكام تقديم المعلمين"
+          fallbackBody="يجب قراءة الشروط والموافقة عليها قبل التقديم."
+          accent="gold"
+          ctaLabel="أوافق وأبدأ التقديم"
+          fullTermsHref="/terms"
+          onAccepted={() => { setStep("personal"); scrollToTop(); }}
+        />
       )}
 
       {step === "personal" && (

@@ -333,9 +333,12 @@ export function StudentApplicationForm({
       {/* step content */}
       {step === "terms" && (
         <TermsGate
-          termsSlug="student-terms"
+          contentKey="terms.student"
+          fallbackTitle="شروط وأحكام تقديم الطلاب"
+          fallbackBody="يجب قراءة الشروط والموافقة عليها قبل التقديم."
           accent="crimson"
           ctaLabel="أوافق وأبدأ التقديم"
+          fullTermsHref="/terms"
           onAccepted={() => { setStep("student"); scrollToTop(); }}
         />
       )}

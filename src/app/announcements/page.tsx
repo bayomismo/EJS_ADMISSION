@@ -8,7 +8,7 @@ import { ANNOUNCEMENT_TYPES } from "@/lib/constants";
 import { toArabicDigits } from "@/lib/arabic";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 
 const toneMap: Record<string, { card: string; icon: string; badge: string }> = {
   teal: { card: "border-r-emerald-500", icon: "text-emerald-600 bg-emerald-50", badge: "bg-emerald-100 text-emerald-700" },

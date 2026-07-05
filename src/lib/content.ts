@@ -103,6 +103,7 @@ export const CONTENT_GROUPS = {
   homepage: { label: "الصفحة الرئيسية", icon: "🏠" },
   "admission.students": { label: "تقديم الطلاب", icon: "🎓" },
   "admission.teachers": { label: "تقديم المعلمين", icon: "👨‍🏫" },
+  terms: { label: "الشروط والخصوصية", icon: "📜" },
   footer: { label: "الفوتر", icon: "📋" },
   general: { label: "عام", icon: "📝" },
 } as const;

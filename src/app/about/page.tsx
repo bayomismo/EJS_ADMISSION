@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { SectionHeading } from "@/components/public/section-heading";
 import { GraduationCap, Users, MapPin, Award, BookOpen, Heart } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function AboutPage() {
   const page = await db.page.findUnique({ where: { slug: "about" } });
