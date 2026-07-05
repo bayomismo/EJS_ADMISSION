@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   LayoutDashboard, Building2, Map, MapPin, Newspaper, HelpCircle, FileText,
-  Megaphone, Image, Settings, Users, ScrollText, LogOut, Menu, X, Building, BarChart3, GraduationCap,
+  Megaphone, Image, Settings, Users, ScrollText, LogOut, Menu, X, Building, BarChart3, GraduationCap, Type,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ const NAV_GROUPS: { title: string; items: { href: string; label: string; icon: a
       { href: "/admin/faq", label: "الأسئلة الشائعة", icon: HelpCircle, perm: "faq" },
       { href: "/admin/documents", label: "المستندات", icon: FileText, perm: "documents" },
       { href: "/admin/media", label: "مكتبة الوسائط", icon: Image, perm: "media" },
+      { href: "/admin/content", label: "محرر النصوص", icon: Type, perm: "content" },
     ],
   },
   {

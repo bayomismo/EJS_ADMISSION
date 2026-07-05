@@ -31,6 +31,9 @@ model User {
   // null/undefined = full access (super-admin, admin).
   scope       String?
 
+  contentBlocksEdited   ContentBlock[]       @relation("ContentBlockUpdatedBy")
+  contentRevisionsEdited ContentBlockRevision[] @relation("ContentRevisionEditedBy")
+
   @@index([roleId])
 }
 
@@ -373,6 +376,47 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@index([action])
+}
+
+// ───────────────────────────── Content Blocks (CMS) ─────────────────────────────
+//
+// Key/value store for end-user-facing marketing/intro text. Every block
+// has a hardcoded fallback in the consuming page, so missing/empty
+// blocks never break the public site.
+
+model ContentBlock {
+  key         String   @unique
+  valueAr     String
+  valueEn     String?
+  group       String   @default("general")   // e.g. "homepage", "admission.students", "footer"
+  label       String?                       // human-readable label shown in admin
+  description String?                       // helper text shown in admin
+  isActive    Boolean  @default(true)
+  updatedById String?
+  updatedBy   User?    @relation("ContentBlockUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  revisions   ContentBlockRevision[]
+
+  @@index([group])
+  @@index([isActive])
+}
+
+// Append-only history of every edit. Lets admins roll back a single
+// block to a previous value from the UI without touching git.
+
+model ContentBlockRevision {
+  id         String   @id @default(cuid())
+  blockKey   String
+  block      ContentBlock @relation(fields: [blockKey], references: [key], onDelete: Cascade)
+  valueAr    String
+  valueEn    String?
+  editedById String?
+  editedBy   User?    @relation("ContentRevisionEditedBy", fields: [editedById], references: [id], onDelete: SetNull)
+  editedAt   DateTime @default(now())
+
+  @@index([blockKey, editedAt])
 }
 
 // ───────────────────────────── Admissions ─────────────────────────────
