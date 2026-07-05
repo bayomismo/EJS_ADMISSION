@@ -11,12 +11,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toArabicNumber } from "@/lib/arabic";
+import { getContent } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 
 export default async function TeacherAdmissionLandingPage() {
   const settings = await getSiteSettings();
   const schoolsCount = await db.school.count({ where: { isActive: true, isArchived: false } });
+
+  const [heroTitle, heroSubtitle] = await Promise.all([
+    getContent("admission.teachers.heroTitle", "انضم لفريق المدارس المصرية اليابانية"),
+    getContent("admission.teachers.heroSubtitle", `تقدم للعمل بمنهجية «توكاتسو» اليابانية — بيئة تعليمية متميزة في ${toArabicNumber(schoolsCount)} مدرسة على مستوى الجمهورية`),
+  ]);
 
   const steps = [
     { icon: FileText, title: "قراءة الشروط", desc: "استعراض شروط وأحكام التقديم للمعلمين بالكامل والموافقة عليها" },
@@ -43,10 +49,10 @@ export default async function TeacherAdmissionLandingPage() {
             <Users className="h-4 w-4" /> القسم C — تقديم المعلمين
           </div>
           <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl text-balance">
-            انضم لفريق المدارس المصرية اليابانية
+            {heroTitle}
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg leading-relaxed">
-            تقدم للعمل بمنهجية «توكاتسو» اليابانية — بيئة تعليمية متميزة في {toArabicNumber(schoolsCount)} مدرسة على مستوى الجمهورية
+            {heroSubtitle}
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">

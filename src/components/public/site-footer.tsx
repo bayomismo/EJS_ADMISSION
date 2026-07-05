@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { Building2, Mail, Phone, MapPin, Facebook, Instagram, Youtube } from "lucide-react";
 import type { SiteSettings } from "@/lib/constants";
+import { getContent } from "@/lib/content";
 
-export function SiteFooter({ settings }: { settings: SiteSettings }) {
+export async function SiteFooter({ settings }: { settings: SiteSettings }) {
+  const [footerDescription, footerQuickLinksTitle, footerContactTitle, footerSocialTitle] = await Promise.all([
+    getContent("footer.description", `${settings.branding.taglineAr} — البوابة الرسمية للقبول الإلكتروني للمدارس المصرية اليابانية.`),
+    getContent("footer.quickLinksTitle", "روابط سريعة"),
+    getContent("footer.contactTitle", "تواصل معنا"),
+    getContent("footer.socialTitle", "تابعنا"),
+  ]);
+
   return (
     <footer className="mt-auto border-t border-border bg-secondary/30">
       <div className="mx-auto max-w-7xl px-4 py-12">
@@ -22,14 +30,13 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {settings.branding.taglineAr} — البوابة الرسمية للقبول الإلكتروني
-              للمدارس المصرية اليابانية.
+              {footerDescription}
             </p>
           </div>
 
           {/* quick links */}
           <div>
-            <h3 className="mb-3 text-sm font-bold text-foreground">روابط سريعة</h3>
+            <h3 className="mb-3 text-sm font-bold text-foreground">{footerQuickLinksTitle}</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/schools" className="hover:text-primary">ابحث عن مدرسة</Link></li>
               <li><Link href="/faq" className="hover:text-primary">الأسئلة الشائعة</Link></li>
@@ -41,7 +48,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
 
           {/* contact */}
           <div>
-            <h3 className="mb-3 text-sm font-bold text-foreground">تواصل معنا</h3>
+            <h3 className="mb-3 text-sm font-bold text-foreground">{footerContactTitle}</h3>
             <ul className="space-y-2.5 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-primary" />
@@ -60,7 +67,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
 
           {/* social */}
           <div>
-            <h3 className="mb-3 text-sm font-bold text-foreground">تابعنا</h3>
+            <h3 className="mb-3 text-sm font-bold text-foreground">{footerSocialTitle}</h3>
             <div className="flex flex-wrap gap-2">
               {settings.social.facebook && (
                 <a href={settings.social.facebook} target="_blank" rel="noreferrer"

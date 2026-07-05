@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ANNOUNCEMENT_TYPES } from "@/lib/constants";
+import { getContent, getContentGroup } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,18 @@ async function getHomeData() {
   return { settings, featured, news, faqs, docs, announcements, banners, counts };
 }
 
+const FALLBACKS = {
+  heroTitleSuffix: (year: string) => `بوابة القبول الإلكتروني ${year}`,
+  heroDescription: (schools: number, govs: number) =>
+    `ابحث عن مدرستك من بين أكثر من ${schools} مدرسة موزعة على ${govs} محافظة. تابع شروط القبول، واطّلع على تفاصيل المدارس، وقدّم طلبك إلكترونياً عبر البوابة الرسمية.`,
+  heroCtaPrimary: "ابحث عن مدرسة",
+  heroCtaSecondary: "شروط القبول",
+  footerDescription: (tagline: string) => `${tagline} — البوابة الرسمية للقبول الإلكتروني للمدارس المصرية اليابانية.`,
+  footerQuickLinksTitle: "روابط سريعة",
+  footerContactTitle: "تواصل معنا",
+  footerSocialTitle: "تابعنا",
+};
+
 const QUICK_ACCESS = [
   { href: "/schools", label: "ابحث عن مدرسة", desc: "حدّد محافظتك ومدينتك واعثر على أقرب مدرسة", icon: Search, color: "from-blue-600 to-blue-800" },
   { href: "/faq", label: "الأسئلة الشائعة", desc: "إجابات على أكثر الأسئلة شيوعاً حول القبول", icon: HelpCircle, color: "from-rose-500 to-red-600" },
@@ -59,6 +72,15 @@ const QUICK_ACCESS = [
 export default async function HomePage() {
   const { settings, featured, news, faqs, docs, announcements, counts } = await getHomeData();
   const live = computeLiveStatus(settings.admission);
+
+  // ContentBlock reads — each call has a hardcoded fallback so the page
+  // never breaks if a block is missing or the DB is down.
+  const [heroTitleSuffix, heroDescription, heroCtaPrimary, heroCtaSecondary] = await Promise.all([
+    getContent("home.hero.titleSuffix", FALLBACKS.heroTitleSuffix(settings.admission.year)),
+    getContent("home.hero.description", FALLBACKS.heroDescription(counts.schools, counts.governorates)),
+    getContent("home.hero.ctaPrimary", FALLBACKS.heroCtaPrimary),
+    getContent("home.hero.ctaSecondary", FALLBACKS.heroCtaSecondary),
+  ]);
   const statusColor =
     live.status === "OPEN" ? "green" : live.status === "UPCOMING" ? "gold" : "red";
   const colorMap: Record<string, string> = {
@@ -80,25 +102,23 @@ export default async function HomePage() {
               <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-6xl text-balance">
                 {settings.branding.siteNameAr}
                 <span className="mt-2 block text-2xl font-bold text-primary sm:text-3xl">
-                  بوابة القبول الإلكتروني {settings.admission.year}
+                  {heroTitleSuffix}
                 </span>
               </h1>
               <p className="max-w-2xl text-base text-muted-foreground sm:text-lg leading-relaxed">
-                ابحث عن مدرستك من بين أكثر من {toArabicNumber(counts.schools)} مدرسة موزعة على
-                {" "}{toArabicNumber(counts.governorates)} محافظة. تابع شروط القبول، واطّلع على
-                تفاصيل المدارس، وقدّم طلبك إلكترونياً عبر البوابة الرسمية.
+                {heroDescription}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <Button asChild size="lg" className="bg-crimson hover:bg-crimson/90 text-white px-7 h-12 text-base">
                   <Link href="/schools">
                     <Search className="ml-2 h-5 w-5" />
-                    ابحث عن مدرسة
+                    {heroCtaPrimary}
                   </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="h-12 text-base px-7">
                   <Link href="/documents">
                     <FileText className="ml-2 h-5 w-5" />
-                    شروط القبول
+                    {heroCtaSecondary}
                   </Link>
                 </Button>
               </div>

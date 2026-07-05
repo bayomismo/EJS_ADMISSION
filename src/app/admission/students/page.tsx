@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toArabicNumber } from "@/lib/arabic";
+import { getContent } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,13 @@ export default async function StudentAdmissionLandingPage() {
   const settings = await getSiteSettings();
   const live = computeLiveStatus(settings.admission);
   const schoolsCount = await db.school.count({ where: { isActive: true, isArchived: false } });
+
+  const [heroTitle, heroSubtitle, requirementsLabel, stepsSubtitle] = await Promise.all([
+    getContent("admission.students.heroTitle", "تقديم طلب الالتحاق بالمدارس المصرية اليابانية"),
+    getContent("admission.students.heroSubtitle", `للعام الدراسي ${settings.admission.year} — ${settings.admission.phasesLabel}`),
+    getContent("admission.students.requirementsTitle", "شروط ومتطلبات التقديم"),
+    getContent("admission.students.stepsSubtitle", "أربع خطوات بسيطة لإتمام طلب الالتحاق"),
+  ]);
 
   const steps = [
     { icon: FileText, title: "قراءة الشروط", desc: "استعراض شروط وأحكام التقديم بالكامل والموافقة عليها" },
@@ -45,10 +53,10 @@ export default async function StudentAdmissionLandingPage() {
             <GraduationCap className="h-4 w-4" /> القسم B — تقديم الطلاب
           </div>
           <h1 className="mt-4 text-4xl font-extrabold leading-tight tracking-tight text-foreground sm:text-5xl text-balance">
-            تقديم طلب الالتحاق بالمدارس المصرية اليابانية
+            {heroTitle}
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg leading-relaxed">
-            للعام الدراسي {settings.admission.year} — {settings.admission.phasesLabel}
+            {heroSubtitle}
           </p>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
             <Badge className={`${live.status === "OPEN" ? "bg-emerald-600" : live.status === "UPCOMING" ? "bg-amber-500" : "bg-rose-600"} text-white`}>
@@ -70,7 +78,7 @@ export default async function StudentAdmissionLandingPage() {
       <div className="mx-auto max-w-5xl px-4 py-12 space-y-12">
         {/* steps */}
         <section>
-          <SectionHeading title="خطوات التقديم" subtitle="أربع خطوات بسيطة لإتمام طلب الالتحاق" centered />
+          <SectionHeading title="خطوات التقديم" subtitle={stepsSubtitle} centered />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((s, i) => (
               <Card key={s.title} className="relative p-5 text-center">
