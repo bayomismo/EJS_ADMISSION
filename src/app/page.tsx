@@ -77,7 +77,10 @@ export default async function HomePage() {
   // never breaks if a block is missing or the DB is down.
   const [heroTitleSuffix, heroDescription, heroCtaPrimary, heroCtaSecondary] = await Promise.all([
     getContent("home.hero.titleSuffix", FALLBACKS.heroTitleSuffix(settings.admission.year)),
-    getContent("home.hero.description", FALLBACKS.heroDescription(counts.schools, counts.governorates)),
+    getContent("home.hero.description", FALLBACKS.heroDescription(counts.schools, counts.governorates), undefined, {
+      schools: toArabicNumber(counts.schools),
+      governorates: toArabicNumber(counts.governorates),
+    }),
     getContent("home.hero.ctaPrimary", FALLBACKS.heroCtaPrimary),
     getContent("home.hero.ctaSecondary", FALLBACKS.heroCtaSecondary),
   ]);

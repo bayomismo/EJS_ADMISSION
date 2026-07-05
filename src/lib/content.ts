@@ -29,20 +29,32 @@ export const getContent = cache(async function getContent(
   key: string,
   fallbackAr: string,
   fallbackEn?: string,
+  substitutions?: Record<string, string | number>,
 ): Promise<string> {
   try {
     const row = await db.contentBlock.findUnique({
       where: { key },
       select: { valueAr: true, valueEn: true, isActive: true },
     });
-    if (!row || !row.isActive || !row.valueAr.trim()) return fallbackAr;
-    return row.valueAr;
+    let value: string;
+    if (!row || !row.isActive || !row.valueAr.trim()) {
+      value = fallbackAr;
+    } else {
+      value = row.valueAr;
+    }
+    return applySubstitutions(value, substitutions);
   } catch (err) {
     // On any DB failure, fall back silently so the page renders.
     console.error(`[content] getContent(${key}) failed:`, err);
-    return fallbackAr;
+    return applySubstitutions(fallbackAr, substitutions);
   }
 });
+
+/** Replace {key} placeholders with the provided values. Missing keys are left as-is. */
+function applySubstitutions(text: string, subs?: Record<string, string | number>): string {
+  if (!subs) return text;
+  return text.replace(/\{(\w+)\}/g, (m, k) => (k in subs ? String(subs[k]) : m));
+}
 
 /**
  * Bilingual variant: returns { ar, en } with per-locale fallbacks.
