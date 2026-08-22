@@ -49,7 +49,10 @@ export async function GET(req: NextRequest) {
       orderBy: { submittedAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { preferredGovernorate: { select: { nameAr: true } } },
+      include: {
+        preferredGovernorate: { select: { nameAr: true } },
+        _count: { select: { documents: true } },
+      },
     }),
     db.teacherApplication.count({ where }),
   ]);

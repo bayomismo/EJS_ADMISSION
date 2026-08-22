@@ -71,6 +71,7 @@ export async function GET(req: NextRequest) {
         governorate: { select: { nameAr: true } },
         city: { select: { nameAr: true } },
         grade: { select: { nameAr: true } },
+        _count: { select: { documents: true } },
       },
     }),
     db.studentApplication.count({ where }),

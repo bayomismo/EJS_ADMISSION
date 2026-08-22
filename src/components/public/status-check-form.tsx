@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { digitsOnly } from "@/lib/validators";
 import { toArabicDigits } from "@/lib/arabic";
+import { ApplicationDocumentsPanel } from "@/components/public/application-documents-panel";
 
 interface StatusResult {
   referenceNo: string;
@@ -202,6 +203,14 @@ export function StatusCheckForm() {
           </Card>
         );
       })()}
+
+      {result && (
+        <ApplicationDocumentsPanel
+          kind={type}
+          referenceNo={result.referenceNo}
+          nationalId={nationalId}
+        />
+      )}
     </div>
   );
 }

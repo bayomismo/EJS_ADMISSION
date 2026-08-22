@@ -31,6 +31,11 @@ export default async function StudentSuccessPage({
               <div className="text-xs text-muted-foreground mb-1">رقم الطلب المرجعي</div>
               <SuccessRef reference={ref || ""} />
             </div>
+            <div className="rounded-xl bg-emerald-50 p-4 text-right text-sm text-emerald-800">
+              <strong>خطوة مهمة:</strong> ارفع المستندات المطلوبة (شهادة الميلاد، الرقم القومي لولي الأمر، صورة شخصية)
+              إلكترونياً من صفحة <Link href="/admission/status" className="underline font-bold">متابعة حالة الطلب</Link> —
+              دون الحاجة للحضور الشخصي لتسليم الأوراق.
+            </div>
             <div className="rounded-xl bg-amber-50 p-4 text-right text-sm text-amber-800">
               <strong>ملاحظة:</strong> عامل الوقت معيار تقييمي. احتفظ برقم الطلب وتابع هاتفك للمقابلة.
             </div>

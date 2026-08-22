@@ -30,6 +30,11 @@ export default async function TeacherSuccessPage({
               <div className="text-xs text-amber-800 mb-1">رقم الطلب المرجعي</div>
               <SuccessRef reference={ref || ""} />
             </div>
+            <div className="rounded-xl bg-emerald-50 p-4 text-right text-sm text-emerald-800">
+              <strong>خطوة مهمة:</strong> ارفع السيرة الذاتية والمستندات المطلوبة (الرقم القومي، شهادة المؤهل)
+              إلكترونياً من صفحة <Link href="/admission/status" className="underline font-bold">متابعة حالة الطلب</Link> —
+              دون الحاجة للحضور الشخصي.
+            </div>
             <div className="rounded-xl bg-amber-50 p-4 text-right text-sm text-amber-800">
               <strong>ملاحظة:</strong> احتفظ برقم الطلب للمتابعة. سيتم التواصل مع المرشحين المؤهلين فقط.
             </div>

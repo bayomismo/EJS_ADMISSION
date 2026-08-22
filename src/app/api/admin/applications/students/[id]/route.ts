@@ -47,7 +47,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   const app = await db.studentApplication.findUnique({
     where: { id },
-    include: { school: true, governorate: true, city: true, grade: true },
+    include: {
+      school: true,
+      governorate: true,
+      city: true,
+      grade: true,
+      documents: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true, docType: true, originalName: true, mimeType: true, size: true,
+          uploadedBy: true, reviewStatus: true, reviewNote: true, createdAt: true,
+        },
+      },
+    },
   });
   if (!app) return fail("غير موجود", 404);
   if (!scopeFilter(guard.scope, app)) {

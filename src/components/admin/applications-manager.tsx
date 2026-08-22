@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Search, Pencil, Trash2, Loader2, X, Eye, GraduationCap, Users,
-  Filter, ChevronRight, ChevronLeft, Download, FileSpreadsheet,
+  Filter, ChevronRight, ChevronLeft, Download, FileSpreadsheet, Paperclip,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { toArabicNumber, toArabicDigits } from "@/lib/arabic";
 import { cn } from "@/lib/utils";
+import { ApplicationDocumentsReview } from "@/components/admin/application-documents-review";
 
 const statusLabels: Record<string, { label: string; cls: string }> = {
   PENDING: { label: "قيد الانتظار", cls: "bg-amber-100 text-amber-700" },
@@ -35,6 +36,7 @@ interface App {
   school?: { nameAr: string; code: string }; grade?: { nameAr: string };
   governorate?: { nameAr: string }; city?: { nameAr: string };
   status: string; statusNote?: string | null; submittedAt: string; notes?: string | null;
+  _count?: { documents?: number };
 }
 
 export function ApplicationsManager({ type }: { type: "students" | "teachers" }) {
@@ -200,7 +202,18 @@ export function ApplicationsManager({ type }: { type: "students" | "teachers" })
                 items.map((a) => (
                   <tr key={a.id} className="border-b hover:bg-accent/30">
                     <td className="p-3"><span className="rounded-md bg-secondary px-2 py-1 text-[10px] font-bold nums">{a.referenceNo}</span></td>
-                    <td className="p-3 font-medium">{a.studentNameAr || a.fullNameAr}</td>
+                    <td className="p-3 font-medium">
+                      {(a._count?.documents ?? 0) > 0 && (
+                        <span
+                          className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 align-middle text-[10px] font-bold text-primary"
+                          title={`${toArabicNumber(a._count!.documents!)} مستند مرفوع`}
+                        >
+                          <Paperclip className="h-3 w-3" />
+                          <span className="nums">{toArabicNumber(a._count!.documents!)}</span>
+                        </span>
+                      )}
+                      {a.studentNameAr || a.fullNameAr}
+                    </td>
                     <td className="p-3 hidden md:table-cell text-muted-foreground text-xs">{isStudent ? a.school?.nameAr : a.subjects}</td>
                     <td className="p-3 hidden lg:table-cell text-muted-foreground text-xs nums">{isStudent ? a.guardianPhone : a.phone}</td>
                     <td className="p-3"><Badge variant="outline" className={cn("text-[10px]", statusLabels[a.status]?.cls)}>{statusLabels[a.status]?.label || a.status}</Badge></td>
@@ -269,6 +282,9 @@ export function ApplicationsManager({ type }: { type: "students" | "teachers" })
               </div>
               {viewing.statusNote && <div><span className="text-xs text-muted-foreground">ملاحظة الحالة</span><p className="mt-1">{viewing.statusNote}</p></div>}
               {viewing.notes && <div><span className="text-xs text-muted-foreground">ملاحظات</span><p className="mt-1">{viewing.notes}</p></div>}
+              <div className="pt-3 mt-3 border-t">
+                <ApplicationDocumentsReview kind={isStudent ? "students" : "teachers"} appId={viewing.id} />
+              </div>
             </div>
           </SheetContent>
         </Sheet>

@@ -463,6 +463,8 @@ model StudentApplication {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  documents ApplicationDocument[]
+
   @@index([schoolId])
   @@index([gradeId])
   @@index([governorateId])
@@ -511,9 +513,36 @@ model TeacherApplication {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  documents ApplicationDocument[]
+
   @@index([preferredGovernorateId])
   @@index([status])
   @@index([submittedAt])
+}
+
+// Documents uploaded by applicants (or admins) and reviewed by admission
+// managers online, replacing onsite document hand-in. Exactly one of
+// studentAppId / teacherAppId is set (enforced in code).
+model ApplicationDocument {
+  id            String   @id @default(cuid())
+  studentAppId  String?
+  studentApp    StudentApplication? @relation(fields: [studentAppId], references: [id], onDelete: Cascade)
+  teacherAppId  String?
+  teacherApp    TeacherApplication? @relation(fields: [teacherAppId], references: [id], onDelete: Cascade)
+  docType       String   // e.g. BIRTH_CERTIFICATE | CV — see APPLICATION_DOC_TYPES
+  filename      String   // storage handle returned by the media-storage backend
+  originalName  String
+  mimeType      String
+  size          Int      // bytes
+  uploadedBy    String   @default("APPLICANT") // APPLICANT | ADMIN
+  reviewStatus  String   @default("PENDING") // PENDING | VERIFIED | REJECTED
+  reviewNote    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([studentAppId])
+  @@index([teacherAppId])
+  @@index([reviewStatus])
 }
 
 // ───────────────────────────── Email Verification ─────────────────────────────

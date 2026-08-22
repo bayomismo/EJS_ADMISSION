@@ -153,3 +153,52 @@ export const SETTING_KEYS = {
   seo: "seo",
   general: "general",
 } as const;
+
+// ───────── Application documents (online review) ─────────
+//
+// Applicants attach scans/PDFs to their application from the status page;
+// admission managers verify or reject each file from the admin panel, so
+// requesters no longer need to hand in papers onsite.
+
+export interface ApplicationDocType {
+  value: string;
+  labelAr: string;
+  required: boolean;
+}
+
+export const APPLICATION_DOC_TYPES: Record<"students" | "teachers", ApplicationDocType[]> = {
+  students: [
+    { value: "BIRTH_CERTIFICATE", labelAr: "شهادة ميلاد الطالب", required: true },
+    { value: "GUARDIAN_NATIONAL_ID", labelAr: "الرقم القومي لولي الأمر", required: true },
+    { value: "STUDENT_PHOTO", labelAr: "صورة شخصية حديثة للطالب", required: true },
+    { value: "PREVIOUS_SCHOOL_CERT", labelAr: "بيان نجاح من المدرسة السابقة", required: false },
+    { value: "OTHER", labelAr: "مستند إضافي (اختياري)", required: false },
+  ],
+  teachers: [
+    { value: "NATIONAL_ID", labelAr: "الرقم القومي", required: true },
+    { value: "CV", labelAr: "السيرة الذاتية", required: true },
+    { value: "QUALIFICATION_CERT", labelAr: "شهادة المؤهل الدراسي", required: true },
+    { value: "EXPERIENCE_CERT", labelAr: "شهادات الخبرة", required: false },
+    { value: "TEACHING_CERT", labelAr: "شهادة مزاولة المهنة", required: false },
+    { value: "OTHER", labelAr: "مستند إضافي (اختياري)", required: false },
+  ],
+};
+
+/** MIME types accepted for application documents. Scans are PDF/images. */
+export const APPLICATION_DOC_MIMES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
+export const MAX_APPLICATION_DOC_BYTES = 10 * 1024 * 1024; // 10 MB per file
+export const MAX_DOCS_PER_APPLICATION = 15;                 // across all types
+
+export const DOC_REVIEW_STATUSES = [
+  { value: "PENDING", labelAr: "بانتظار المراجعة" },
+  { value: "VERIFIED", labelAr: "معتمد" },
+  { value: "REJECTED", labelAr: "مرفوض" },
+] as const;
+
+export type DocReviewStatus = (typeof DOC_REVIEW_STATUSES)[number]["value"];

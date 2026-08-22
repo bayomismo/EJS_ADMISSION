@@ -19,7 +19,7 @@ export default function AdmissionStatusPage() {
           </span>
           <h1 className="text-3xl font-extrabold mb-2">متابعة حالة الطلب</h1>
           <p className="text-sm text-muted-foreground">
-            أدخل الرقم المرجعي والرقم القومي للاطلاع على حالة طلبك
+            أدخل الرقم المرجعي والرقم القومي للاطلاع على حالة طلبك ورفع المستندات المطلوبة إلكترونياً
           </p>
         </div>
         <StatusCheckForm />
