@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# T1.4: template only, contains NO real values
+!.env.example
 
 # runtime upload storage (non-served, owned by the app)
 var/
