@@ -3,6 +3,7 @@
 **Prepared for:** Egyptian Japanese Schools (EJS)
 **Date:** 24 November 2026
 **Status:** Awaiting EJS decisions. **No decision in this document has been confirmed by EJS yet.**
+**Total:** 22 decisions (Part A: 11 · Part B: 10 · Optional Confirmation: 1)
 
 ---
 
@@ -14,7 +15,7 @@ For each item, please tick **Approved** or **Not Approved**, and add **Comments*
 
 ---
 
-## Part A — Required before development can proceed
+## Part A — Required before development can proceed (11 items)
 
 These decisions are needed first. Work on the related parts of the portal cannot be completed until we receive them.
 
@@ -27,7 +28,6 @@ These decisions are needed first. Work on the related parts of the portal cannot
 | **D4** | Time of submission | Whether the time an application is submitted is used as a criterion in admission decisions. *(Approved = yes, it is a criterion.)* | ☐ Approved ☐ Not Approved | |
 | **D5-a** | Application data retention period | How long application data should be kept after the admission cycle. Please state the period in Comments. | ☐ Approved ☐ Not Approved | |
 | **D5-b** | Required documents list | That the list shown to parents matches EJS's current document submission process: (1) child's digital birth certificate, (2) guardian's national ID card, (3) child's vaccination certificate, (4) six recent photos of the child, (5) enrolment certificate from the previous school (transfers only). | ☐ Approved ☐ Not Approved | |
-| **D5-c** | Privacy Policy text | Approval of the proposed Privacy Policy text to be published on the portal. **We will share the proposed text for review first. Please approve only after reviewing that text.** | *To be completed after the text is shared:* ☐ Approved ☐ Not Approved | |
 | **D6** | Teacher applications | Whether online teacher job applications will be open in this release. *(Approved = open; Not Approved = closed for this release.)* | ☐ Approved ☐ Not Approved | |
 | **E-08** | One application per applicant | Whether each applicant (identified by national ID) may have only one active application at a time, with a new application allowed only after the previous one is rejected. **Please confirm explicitly whether this rule applies to student applications only, or to both student and teacher applications.** | ☐ Approved – student applications only ☐ Approved – student and teacher applications ☐ Not Approved | |
 | **E-01** | Boys / girls / mixed classification of schools | The classification of each of the 99 schools as boys-only, girls-only or mixed. **We will first share the 99-school list for review. EJS approval will be requested once the list has been shared.** | *To be completed after the list is shared:* ☐ Approved ☐ Not Approved | |
@@ -35,7 +35,7 @@ These decisions are needed first. Work on the related parts of the portal cannot
 
 ---
 
-## Part B — Required before acceptance testing (UAT) and launch
+## Part B — Required before acceptance testing (UAT) and launch (10 items)
 
 | No. | Decision | What we need EJS to confirm | Response | Comments |
 |---|---|---|---|---|
@@ -44,6 +44,7 @@ These decisions are needed first. Work on the related parts of the portal cannot
 | **D10** | Staff session length | That staff are signed out automatically 8 hours after signing in, even if they are still active. *(Provisionally approved by the project owner; awaiting EJS confirmation.)* | ☐ Approved ☐ Not Approved | |
 | **E-03** | Retention of security logs | The retention period for system security logs that include staff account identifiers. *(Proposed: a maximum of 30 days.)* | ☐ Approved ☐ Not Approved | |
 | **E-04** | Legal review | That EJS's legal adviser will review the Terms and Privacy texts, including how they apply under the Egyptian Personal Data Protection Law (Law No. 151 of 2020). | ☐ Approved ☐ Not Approved | |
+| **D5-c** | Privacy Policy text | Approval of the proposed Privacy Policy text to be published on the portal. **We will share the proposed text for review first. Please approve only after reviewing that text.** | *To be completed after the text is shared:* ☐ Approved ☐ Not Approved | |
 | **E-05** | Parent support contact | The phone number or email address parents can use for help, for example if they lose their application reference number. Please provide it in Comments. | ☐ Approved ☐ Not Approved | |
 | **E-06** | Admission period | The academic year, and the opening and closing dates of the admission period at launch. Please provide them in Comments. | ☐ Approved ☐ Not Approved | |
 | **E-07** | Official portal address | The official web address (domain) of the portal. Please provide it in Comments. | ☐ Approved ☐ Not Approved | |
@@ -51,7 +52,7 @@ These decisions are needed first. Work on the related parts of the portal cannot
 
 ---
 
-## Optional Confirmation
+## Optional Confirmation (1 item)
 
 This item is **optional** and **does not block development**. If EJS has no specific policy, the portal will use standard security settings.
 
