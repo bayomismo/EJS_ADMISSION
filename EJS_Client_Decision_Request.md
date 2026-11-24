@@ -23,15 +23,15 @@ These decisions are needed first. Work on the related parts of the portal cannot
 | **D1** | Grades and age rules | Which grades are open for admission this year, and the minimum and maximum age on 1 October for each grade. The portal currently refers to both "KG1 to Grade 3" and "KG1 to Grade 6", so please confirm which applies and list the age rules in Comments. | ☐ Approved ☐ Not Approved | |
 | **D2** | Staff notes visible to parents | Whether notes written by admissions staff on an application should be shown to parents when they check their status online. *(Approved = shown to parents; Not Approved = internal only.)* | ☐ Approved ☐ Not Approved | |
 | **D2-b** | Details shown in the status check | Whether parents checking their status online may also see the student's name, school and grade, in addition to the status and dates. *(Approved = also show name, school and grade.)* | ☐ Approved ☐ Not Approved | |
-| **D3** | Email notifications | That automatic email notifications to parents are **not** required for the first release, and that parents will check their status online instead. If notifications are required, this may affect the schedule. | ☐ Approved ☐ Not Approved | |
+| **D3** | Email notifications | Whether automatic email notifications to parents are needed in the first release. *(Approved = email notifications are **not** required for the first release, and parents check their status online. Not Approved = EJS requires email notifications for the first release.)* Requiring notifications may affect the delivery schedule. | ☐ Approved ☐ Not Approved | |
 | **D4** | Time of submission | Whether the time an application is submitted is used as a criterion in admission decisions. *(Approved = yes, it is a criterion.)* | ☐ Approved ☐ Not Approved | |
-| **D5-a** | Data retention and privacy policy | How long application data should be kept after the admission cycle, and the approved privacy policy text to publish on the portal. | ☐ Approved ☐ Not Approved | |
+| **D5-a** | Application data retention period | How long application data should be kept after the admission cycle. Please state the period in Comments. | ☐ Approved ☐ Not Approved | |
 | **D5-b** | Required documents list | That the list shown to parents matches EJS's current document submission process: (1) child's digital birth certificate, (2) guardian's national ID card, (3) child's vaccination certificate, (4) six recent photos of the child, (5) enrolment certificate from the previous school (transfers only). | ☐ Approved ☐ Not Approved | |
+| **D5-c** | Privacy Policy text | Approval of the proposed Privacy Policy text to be published on the portal. **We will share the proposed text for review first. Please approve only after reviewing that text.** | *To be completed after the text is shared:* ☐ Approved ☐ Not Approved | |
 | **D6** | Teacher applications | Whether online teacher job applications will be open in this release. *(Approved = open; Not Approved = closed for this release.)* | ☐ Approved ☐ Not Approved | |
-| **E-08** | One application per student | That each student (identified by national ID) may have only one active application at a time, and that a new application is allowed only after the previous one is rejected. The same rule would apply to teacher applications. | ☐ Approved ☐ Not Approved | |
-| **E-01** | Boys / girls / mixed classification of schools | The classification of each of the 99 schools as boys-only, girls-only or mixed. We will send the school list for EJS to review and sign. | ☐ Approved ☐ Not Approved | |
-| **E-02** | Official school list | The official list of the 99 schools: names, governorate, city, and type (Arabic or Languages). We will send the list for EJS to review and sign. | ☐ Approved ☐ Not Approved | |
-| **E-10** *(optional)* | Staff password policy | Whether EJS has an information security policy for staff passwords and account lockout that the portal must follow. If yes, please describe it in Comments. | ☐ Approved ☐ Not Approved | |
+| **E-08** | One application per applicant | Whether each applicant (identified by national ID) may have only one active application at a time, with a new application allowed only after the previous one is rejected. **Please confirm explicitly whether this rule applies to student applications only, or to both student and teacher applications.** | ☐ Approved – student applications only ☐ Approved – student and teacher applications ☐ Not Approved | |
+| **E-01** | Boys / girls / mixed classification of schools | The classification of each of the 99 schools as boys-only, girls-only or mixed. **We will first share the 99-school list for review. EJS approval will be requested once the list has been shared.** | *To be completed after the list is shared:* ☐ Approved ☐ Not Approved | |
+| **E-02** | Official school list | The official list of the 99 schools: names, governorate, city, and type (Arabic or Languages). **We will first share the list for review. EJS approval will be requested once the list has been shared.** | *To be completed after the list is shared:* ☐ Approved ☐ Not Approved | |
 
 ---
 
@@ -48,6 +48,16 @@ These decisions are needed first. Work on the related parts of the portal cannot
 | **E-06** | Admission period | The academic year, and the opening and closing dates of the admission period at launch. Please provide them in Comments. | ☐ Approved ☐ Not Approved | |
 | **E-07** | Official portal address | The official web address (domain) of the portal. Please provide it in Comments. | ☐ Approved ☐ Not Approved | |
 | **E-09** | Sign-off and launch contacts | The EJS representatives who will sign off acceptance testing, and the EJS contact during the first 48 hours after launch. Please provide names in Comments. | ☐ Approved ☐ Not Approved | |
+
+---
+
+## Optional Confirmation
+
+This item is **optional** and **does not block development**. If EJS has no specific policy, the portal will use standard security settings.
+
+| No. | Decision | What we need EJS to confirm | Response | Comments |
+|---|---|---|---|---|
+| **E-10** | Staff password policy | Whether EJS has an information security policy for staff passwords and account lockout that the portal must follow. *(Approved = an EJS policy applies; please describe it in Comments. Not Approved = no specific EJS policy.)* | ☐ Approved ☐ Not Approved | |
 
 ---
 
