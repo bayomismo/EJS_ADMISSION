@@ -48,6 +48,35 @@ describe("parseEgyptianId — valid IDs", () => {
     assert.deepEqual(ymd(r.birthDate), [2020, 2, 29]);
   });
 
+  // Positive calendar cases (owner request after batch 3): leap years and the
+  // last valid day of every month must be accepted with the exact same date.
+  for (const [y, m, d, label] of [
+    [2024, 2, 29, "leap year 2024"],
+    [2000, 2, 29, "century leap year 2000 (divisible by 400)"],
+    [2016, 2, 29, "leap year 2016"],
+    [2021, 2, 28, "28 Feb in a non-leap year"],
+    [2021, 1, 31, "31 Jan"],
+    [2021, 3, 31, "31 Mar"],
+    [2021, 4, 30, "30 Apr"],
+    [2021, 5, 31, "31 May"],
+    [2021, 6, 30, "30 Jun"],
+    [2021, 7, 31, "31 Jul"],
+    [2021, 8, 31, "31 Aug"],
+    [2021, 9, 30, "30 Sep (day before the 1 Oct cutoff)"],
+    [2021, 10, 1, "1 Oct (cutoff day)"],
+    [2021, 10, 31, "31 Oct"],
+    [2021, 11, 30, "30 Nov"],
+    [2021, 12, 31, "31 Dec"],
+    [2021, 1, 1, "1 Jan"],
+  ] as const) {
+    it(`accepts valid date ${y}-${m}-${d} (${label}) without changing it`, () => {
+      const r = parseEgyptianId(syntheticNationalId({ year: y, month: m, day: d, gender: "FEMALE" }));
+      assert.equal(r.valid, true);
+      assert.deepEqual(ymd(r.birthDate), [y, m, d]);
+      assert.deepEqual([r.year, r.month, r.day], [y, m, d]);
+    });
+  }
+
   it("ignores non-digit separators (current documented behaviour)", () => {
     const id = syntheticNationalId({ year: 2021, month: 3, day: 15, gender: "MALE" });
     const spaced = `${id.slice(0, 1)} ${id.slice(1, 7)}-${id.slice(7)}`;
