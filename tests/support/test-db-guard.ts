@@ -49,7 +49,9 @@ export function assertLocalTestDbUrl(url: string | undefined | null): void {
  * - if DATABASE_URL is set, it must be the local test DB (else throw);
  * - if unset, use an unreachable loopback address so nothing real is touched.
  */
-export function resolveTestDatabaseUrl(env: NodeJS.ProcessEnv = process.env): string {
+export function resolveTestDatabaseUrl(
+  env: Record<string, string | undefined> = process.env,
+): string {
   const url = env.DATABASE_URL;
   if (!url) return UNREACHABLE_LOCAL_DB_URL;
   assertLocalTestDbUrl(url);
